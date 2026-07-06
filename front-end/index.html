@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NCEA Review Navigator</title>
+  <link rel="stylesheet" href="styles.css">
+
+
+  </script>
+</head>
+<!-- Load the copyright-free Lucide Icon library -->
+<script src="https://unpkg.com/lucide@latest"></script>
+<body>
+
+  <!-- Topbar: hidden until logged in -->
+  <div id="topbar" class="hidden">
+    <span class="brand">NCEA Review Navigator</span>
+    <button data-action="nav-dashboard">Dashboard</button>
+    <button data-action="do-logout">Log out</button>
+  </div>
+
+  <!-- Screen: Auth (login / signup)-->
+  <section id="screen-auth" class="screen ">
+    <div class="auth-bg">
+      <div class="auth-card">
+
+        <div class="brand">
+          <span class="brand-mark">N</span>
+          NCEA Review Navigator
+        </div>
+        <p class="subtitle">NCEA daily revision scheduler</p>
+
+        <!-- Tab switcher -->
+        <div class="auth-tabs">
+          <button data-action="auth-tab" data-mode="login" class="active">Log in</button>
+          <button data-action="auth-tab" data-mode="signup">Create account</button>
+        </div>
+
+        <!-- Login form -->
+        <div id="auth-login" class="auth-form ">
+          <div class="field">
+            <label for="login-email">Email</label>
+            <input class="input" id="login-email" type="email" placeholder="you@email.com" autocomplete="email">
+          </div>
+          <div class="field">
+            <label for="login-pw">Password</label>
+            <input class="input" id="login-pw" type="password" placeholder="Your password" autocomplete="current-password">
+          </div>
+          <p class="error-msg hidden" id="login-err"></p>
+          <button class="btn btn-primary btn-block btn-lg " data-action="do-login">Log in</button>
+        </div>
+
+
+       <!-- Signup form : hidden  -->
+        <div id="auth-signup" class="auth-form hidden">
+          <div class="field">
+            <label for="signup-name">Full name</label>
+            <input class="input" id="signup-name" placeholder="e.g. Thomas Robbinson" autocomplete="name">
+          </div>
+          <div class="field">
+            <label for="signup-email">Email</label>
+            <input class="input" id="signup-email" type="email" placeholder="e.g. thomas1234@email.com" autocomplete="email">
+          </div>
+          <div class="field">
+            <label for="signup-year">Year level</label>
+            <select class="input select-input" id="signup-year">
+              <option value="12" selected>Year 12 (NCEA Level 2)</option>
+              <option value="13">Year 13 (NCEA Level 3)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="signup-pw">Password</label>
+            <input class="input" id="signup-pw" type="password" placeholder="Pleanse enter least 4 characters" autocomplete="new-password">
+          </div>
+          <div class="field">
+            <label for="signup-pw2">Confirm password</label>
+            <input class="input" id="signup-pw2" type="password" placeholder="Re-enter password" autocomplete="new-password">
+          </div>
+          <p class="error-msg" id="signup-err"></p>
+          <button class="btn btn-primary btn-block btn-lg" data-action="do-signup">Create account</button>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+   <!-- Screen- Onboarding 
+  <section id="screen-onboarding" class="screen  ">
+    <div class="ob-bg">
+      <div class="ob-card">
+
+        
+        <div id="ob-dots" class="ob-dots">
+          <span class="dot active"></span>
+          <span class="dot"></span>
+          <span class="dot"></span>
+        </div>
+
+      
+<div id="ob-step-1" class="ob-step hidden">
+
+  <div class="ob-icon"><i data-lucide="sparkles"></i></div>
+  <h2>Welcome to NCEA Review Navigator</h2>
+  <p class="ob-desc">This  spaced repetition web dashboard will help you revise in smarter way.  It schedules each topic at exactly the right time so that knowledges can stay in your long-term memory.</p>
+  <p class="ob-desc">Now, lets set up your first subject to get started.</p>
+  <div class="ob-actions">
+    <button class="btn btn-primary btn-lg" data-action="ob-next">Get started -></button>
+    <button class="btn btn-ghost" data-action="ob-skip">Skip setup</button>
+  </div>
+</div>
+
+
+<div id="ob-step-2" class="ob-step hidden  ">
+
+  <div class="ob-icon" id="ob-subject-icon-display"><i data-lucide="book-open"></i></div>
+  <h2>Add your first subject</h2>
+  <p class="ob-desc">Pick one of the common NCEA subjects below, or type your own.</p>
+  <div class="field">
+    <label for="ob-subj-select">Subject</label>
+    
+    <select class="input select-input" id="ob-subj-select">
+      <option value="">— Choose a subject —</option>
+      <option>English</option>
+      <option value="Mathematics" data-icon="ruler" data-colour="#8B5CF6">Mathematics</option>
+      <option >Biology</option>
+      <option >Chemistry</option>
+      <option >Physics</option>
+      <option>History</option>
+      <option >Geography</option>
+      <option >Economics</option>
+      <option>Other (type your own)</option>
+    </select>
+  </div>
+  <div id="ob-custom-field" class="field ">
+    <label for="ob-custom">Subject name</label>
+    <input class="input" id="ob-custom" placeholder="e.g. Digital Technology">
+  </div>
+  <div class="ob-actions">
+    <button class="btn btn-primary btn-lg" data-action="ob-add-subject">Add subject +</button>
+  </div>
+</div>
+
+
+<div id="ob-step-3" class="ob-step hidden ">
+  
+  <div class="ob-icon"><i data-lucide="sprout"></i></div>
+  <h2>Add topics for <span id="ob-subject-name">your subject</span></h2>
+  <p class="ob-desc">Topics are the specific things you revise like standards, chapters, concepts. Add as many as you like now, or skip and add them later.</p>
+  <div class="field ob-topic-row">
+    <input class="input" id="ob-topic-input" placeholder="e.g. Photosynthesis, Organic compounds…">
+    <button class="btn btn-primary" data-action="ob-add-topic">Add</button>
+  </div>
+  <div id="ob-topic-chips" class="topic-chips"></div>
+  <div class="ob-actions">
+    <button class="btn btn-primary btn-lg" data-action="ob-finish">Finish setup -></button>
+    <button class="btn btn-ghost" data-action="ob-skip">Skip for now</button>
+  </div>
+</div>
+
+      </div>
+    </div>
+  </section>-->
+  
+
+<script type="module" src="javascripts/main.js"></script>
+</body>
+</html>
