@@ -4,13 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>NCEA Review Navigator</title>
-  <link rel="stylesheet" href="styles.css">
-
-
-  </script>
+  <link rel="stylesheet" href="style.css">
+  <!-- Load the copyright-free Lucide Icon library -->
+  <script src="https://unpkg.com/lucide@latest"></script>
 </head>
-<!-- Load the copyright-free Lucide Icon library -->
-<script src="https://unpkg.com/lucide@latest"></script>
 <body>
 
   <!-- Topbar: hidden until logged in -->
@@ -21,7 +18,7 @@
   </div>
 
   <!-- Screen: Auth (login / signup)-->
-  <section id="screen-auth" class="screen ">
+  <section id="screen-auth" class="screen  ">
     <div class="auth-bg">
       <div class="auth-card">
 
@@ -84,13 +81,15 @@
       </div>
     </div>
   </section>
+  <section id="view-auth" class="view">
+  </section>
 
-   <!-- Screen- Onboarding 
-  <section id="screen-onboarding" class="screen  ">
+
+   <!-- Screen- Onboarding -->
+  <section id="screen-onboarding" class="screen hidden ">
     <div class="ob-bg">
       <div class="ob-card">
 
-        
         <div id="ob-dots" class="ob-dots">
           <span class="dot active"></span>
           <span class="dot"></span>
@@ -98,11 +97,11 @@
         </div>
 
       
-<div id="ob-step-1" class="ob-step hidden">
+<div id="ob-step-1" class="ob-step ">
 
   <div class="ob-icon"><i data-lucide="sparkles"></i></div>
   <h2>Welcome to NCEA Review Navigator</h2>
-  <p class="ob-desc">This  spaced repetition web dashboard will help you revise in smarter way.  It schedules each topic at exactly the right time so that knowledges can stay in your long-term memory.</p>
+  <p class="ob-desc">This  spaced repetition web dashboard will help you revises in smarter way.  It schedules each topic repatedly so that knowledges can stay in your long-term memory.</p>
   <p class="ob-desc">Now, lets set up your first subject to get started.</p>
   <div class="ob-actions">
     <button class="btn btn-primary btn-lg" data-action="ob-next">Get started -></button>
@@ -111,7 +110,7 @@
 </div>
 
 
-<div id="ob-step-2" class="ob-step hidden  ">
+<div id="ob-step-2" class="ob-step hidden ">
 
   <div class="ob-icon" id="ob-subject-icon-display"><i data-lucide="book-open"></i></div>
   <h2>Add your first subject</h2>
@@ -132,10 +131,11 @@
       <option>Other (type your own)</option>
     </select>
   </div>
-  <div id="ob-custom-field" class="field ">
+  <div id="ob-custom-field" class="field hidden">
     <label for="ob-custom">Subject name</label>
     <input class="input" id="ob-custom" placeholder="e.g. Digital Technology">
   </div>
+  <p class="error-msg hidden" id="ob-subject-err"></p>
   <div class="ob-actions">
     <button class="btn btn-primary btn-lg" data-action="ob-add-subject">Add subject +</button>
   </div>
@@ -152,6 +152,7 @@
     <button class="btn btn-primary" data-action="ob-add-topic">Add</button>
   </div>
   <div id="ob-topic-chips" class="topic-chips"></div>
+  <p class="error-msg hidden" id="ob-topic-err"></p>
   <div class="ob-actions">
     <button class="btn btn-primary btn-lg" data-action="ob-finish">Finish setup -></button>
     <button class="btn btn-ghost" data-action="ob-skip">Skip for now</button>
@@ -160,7 +161,7 @@
 
       </div>
     </div>
-  </section>-->
+  </section>
   
 
 <script type="module" src="javascripts/main.js"></script>

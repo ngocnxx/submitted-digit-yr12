@@ -1,69 +1,18 @@
-// ==========================================
-//  1. GLOBAL HELPERS & SHORTCUTS 
-// ==========================================
-const $ = (selector) => document.querySelector(selector);
-const $$ = (selector) => document.querySelectorAll(selector);
-function trace(...messages) {
-  console.log("%c[trace]", "color: #00bcd4; font-weight: bold;", ...messages);
-}
+import { $, $$, hide, show, withPending } from '../dom.js'; // Note the ../
+import { state } from '../state.js';
+import { trace } from '../debug.js';
+import { navigate } from '../router.js';
+import { api, setToken } from '../api.js'; // Added this so doLogin doesn't crash!
 
- function hide(el) { if (el) el.classList.add('hidden'); }
-function show(el) { if (el) el.classList.remove('hidden'); }
-
-  let state = { authMode: 'login', currentUser: null };
 const MIN_PASSWORD_LEN = 6;
 
- function setToken(token) { localStorage.setItem('ncea_token', token); }
-function navigate(route) { 
-  trace(`Navigating to screen: ${route}`);
-   alert(`Frontend Success! Redirecting user to ${route}`); 
-}
-
-async function withPending(btn, text, callback) {
-  const originalText = btn.textContent;
-   btn.textContent = text; 
-  btn.disabled = true;
-  try {
-     return await callback();
-  } finally {
-    btn.textContent = originalText; 
-     btn.disabled = false;
-  }
-}
-
 // ==========================================
-// 2. TEMPORARY: FRONT-END MOCK API SERVER
-// ==========================================
-async function api(method, url, data) {
-  // Simulate half-second network lag
-  await new Promise(resolve => setTimeout(resolve, 500)); 
-
-  if (url === '/api/auth/login') {
-    if (data.email === "student@school.com" && data.password === "password123") {
-      return { 
-      token: "FAKE_JWT_TOKEN_12345", 
-        user: { name: "Alex Student", email: "student@school.com" } 
-      };
-    } else {
-      throw new Error("Incorrect password or user not found!");
-    }
-  }
-
-  if (url === '/api/auth/signup') {
-    return {
-      token: "FAKE_JWT_TOKEN_67890",
-      user: { name: data.name, email: data.email }
-    };
-  }
-}
-
-// ==========================================
-// 3. CORE AUTHENTICATION FUNCTIONS
+// CORE AUTHENTICATION FUNCTIONS
 // ==========================================
 
 // Log tab, clear all fields, hide any leftover error. Called by route().
 export function hydrateAuth() {
-  trace('auth: hydrateAuth() — reset fields, default to login tab');
+  trace('auth: hydrateAuth(), reset fields, default to login tab');
     setAuthMode('login');
   ['login-email', 'login-pw', 'signup-name', 'signup-email', 'signup-pw', 'signup-pw2'].forEach(
     (id) => {
