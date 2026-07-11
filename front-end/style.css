@@ -1,55 +1,61 @@
-:root{
-  
-  /* blue */
-  --blue-50:  #EFF6FF;
-  --blue-100: #DBEAFE;
-  --blue-200: #BFDBFE;
-  --blue-400: #85b8f6;
-  --blue-500: #3886ed;
-  --blue-600: #378bec;
-  --blue-700: #2c6dc3;
-  /* green */
-  --green-50:  #ECFDF5;
-  --green-500: #10B981;
-  --green-600: #059669;
-  /* orange */
-  --amber-50:  #FFFBEB;
-  --amber-500: #F59E0B;
-  --amber-600: #D97706;
-  /* red */
-  --red-50:  #FEF2F2;
-  --red-500: #EF4444;
-  --red-600: #DC2626;
-  /*  neutral  */
-  --slate-50:  #F8FAFC;
-  --slate-100: #F1F5F9;
-  --slate-200: #E2E8F0;
-  --slate-300: #CBD5E1;
-  --slate-400: #94A3B8;
-  --slate-500: #64748B;
-  --slate-600: #475569;
-  --slate-700: #334155;
-  --slate-800: #1E293B;
-  --slate-900: #0F172A;
+:root {
+  /* Blues — calm periwinkle (primary actions live at 500; pastels at 50-200) */
+  --blue-50:  #EEF3FF;
+  --blue-100: #E3EAFF;
+  --blue-200: #CDD9FB;
+  --blue-400: #9DB0F0;
+  --blue-500: #7E93EA;
+  --blue-600: #6A80DC;
+  --blue-700: #4C5EA8;
+  /* Greens — sage */
+  --green-50:  #EEF7EF;
+  --green-500: #86BE90;
+  --green-600: #6FA97A;
+  /* Ambers — soft honey */
+  --amber-50:  #FCF4E6;
+  --amber-500: #E7B368;
+  --amber-600: #CE9A4C;
+  /* Reds — soft coral */
+  --red-50:  #FCEEEC;
+  --red-500: #E58C7E;
+  --red-600: #D06E5E;
+  /* Lilac — accent (subject tags / highlights) */
+  --lilac-50:  #F3EFFB;
+  --lilac-500: #A78BD0;
+  /* Warm neutral ramp (greige) — light and airy */
+  --slate-50:  #FAF9F5;
+  --slate-100: #F3F1EB;
+  --slate-200: #E8E4DA;
+  --slate-300: #D6D0C4;
+  --slate-400: #ADA595;
+  --slate-500: #837B6E;
+  --slate-600: #635C50;
+  --slate-700: #48423A;
+  --slate-800: #35302A;
+  --slate-900: #26221C;
   --white: #FFFFFF;
+  /* Warm cream — hero / intro cards / header band */
+  --cream-50:  #FCF5EC;
+  --cream-100: #F7ECDD;
 
-  /* radius */
-  --radius-sm:   6px;
-  --radius-md:   10px;
-  --radius-lg:   16px;
-  --radius-xl:   20px;
+  /* Radius — soft and rounded */
+  --radius-sm:   8px;
+  --radius-md:   12px;
+  --radius-lg:   18px;
+  --radius-xl:   24px;
   --radius-full: 9999px;
 
-  /* Shadows */
-  --shadow-sm: 0 1px 2px rgba(15, 23, 42, .05);
-  --shadow-md: 0 4px 12px rgba(15, 23, 42, .08);
-  --shadow-lg: 0 8px 30px rgba(15, 23, 42, .12);
+  /* Shadows — warm-tinted and gentle */
+  --shadow-sm: 0 1px 2px rgba(70, 60, 45, .04);
+  --shadow-md: 0 4px 16px rgba(70, 60, 45, .06);
+  --shadow-lg: 0 12px 36px rgba(70, 60, 45, .09);
 
-  /* typography (modern system font_ */
-  --font:system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+  /* Typography — modern system font stack (no web fonts to download) */
+  --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial,
+          sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
 
   /* Focus ring */
-  --focus: 0 0 0 3px rgba(59, 130, 246, .35);
+  --focus: 0 0 0 3px rgba(126, 147, 234, .32);
 }
 
 
@@ -188,13 +194,21 @@ p  {
   box-shadow: var(--focus);
 }
 
-/* Inline validation / server error text under a form. */
-.error-msg {
-  color: var(--red-600);
-  font-size: 14px;
-  font-weight: 600;
-  margin: -4px 0 12px;
+.input-error, .input-error:focus {
+  border-color: var(--red-500);
+  box-shadow: 0 0 0 3px var(--red-50);
 }
+/* Inline error banner */
+.error-msg {
+  font-size: 13px;
+  color: var(--red-600);
+  margin-bottom: 12px;
+  padding: 8px 12px;
+  background: var(--red-50);
+  border-radius: var(--radius-sm);
+  border-left: 3px solid var(--red-500);
+}
+
 /*SCREENS
 /* Top bar*/
 #topbar {

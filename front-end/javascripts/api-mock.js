@@ -18,7 +18,7 @@ function load() {
 
 function blank() {
   return { 
-    // Seeded test account so you don't get the "empty room" login error!
+    // Seeded test account so  don't get the "empty room" login error!
     users: [
       {
         id: 1,

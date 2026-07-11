@@ -10,7 +10,7 @@ export function hide(el) {
   if (el) el.classList.add('hidden');
 }
 
-// Escape user-supplied text before inserting into innerHTML (XSS-safe).
+// Escape user text before inserting into innerHTML (XSS-safe).
 export function esc(str) {
   return String(str ?? '')
     .replace(/&/g, '&amp;')

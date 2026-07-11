@@ -18,46 +18,45 @@
   </div>
 
   <!-- Screen: Auth (login / signup)-->
-  <section id="screen-auth" class="screen  ">
-    <div class="auth-bg">
+   <section id="screen-auth" class="screen hidden">
+    <div class="auth-bg">             <!-- full-height gradient backdrop, centers the card -->
       <div class="auth-card">
 
         <div class="brand">
           <span class="brand-mark">N</span>
           NCEA Review Navigator
         </div>
-        <p class="subtitle">NCEA daily revision scheduler</p>
+        <p class="subtitle">Your daily revision scheduler</p>
 
         <!-- Tab switcher -->
         <div class="auth-tabs">
-          <button data-action="auth-tab" data-mode="login" class="active">Log in</button>
+          <button data-action="auth-tab" data-mode="login">Log in</button>
           <button data-action="auth-tab" data-mode="signup">Create account</button>
         </div>
 
         <!-- Login form -->
-        <div id="auth-login" class="auth-form ">
+        <div id="auth-login" class="auth-form">
           <div class="field">
             <label for="login-email">Email</label>
-            <input class="input" id="login-email" type="email" placeholder="you@email.com" autocomplete="email">
+            <input class="input input-error" id="login-email" type="email" placeholder="you@email.com" autocomplete="email">
           </div>
           <div class="field">
             <label for="login-pw">Password</label>
-            <input class="input" id="login-pw" type="password" placeholder="Your password" autocomplete="current-password">
+            <input class="input input-error" id="login-pw" type="password" placeholder="Your password" autocomplete="current-password">
           </div>
           <p class="error-msg hidden" id="login-err"></p>
-          <button class="btn btn-primary btn-block btn-lg " data-action="do-login">Log in</button>
+          <button class="btn btn-primary btn-block btn-lg" data-action="do-login">Sign in</button>
         </div>
 
-
-       <!-- Signup form : hidden  -->
+        <!-- Signup form — hidden until the tab switches -->
         <div id="auth-signup" class="auth-form hidden">
           <div class="field">
             <label for="signup-name">Full name</label>
-            <input class="input" id="signup-name" placeholder="e.g. Thomas Robbinson" autocomplete="name">
+            <input class="input" id="signup-name" placeholder="e.g. Aroha Smith" autocomplete="name">
           </div>
           <div class="field">
             <label for="signup-email">Email</label>
-            <input class="input" id="signup-email" type="email" placeholder="e.g. thomas1234@email.com" autocomplete="email">
+            <input class="input" id="signup-email" type="email" placeholder="you@email.com" autocomplete="email">
           </div>
           <div class="field">
             <label for="signup-year">Year level</label>
@@ -68,101 +67,92 @@
           </div>
           <div class="field">
             <label for="signup-pw">Password</label>
-            <input class="input" id="signup-pw" type="password" placeholder="Pleanse enter least 4 characters" autocomplete="new-password">
+            <input class="input input-error" id="signup-pw" type="password" placeholder="At least 4 characters" autocomplete="new-password">
           </div>
           <div class="field">
             <label for="signup-pw2">Confirm password</label>
-            <input class="input" id="signup-pw2" type="password" placeholder="Re-enter password" autocomplete="new-password">
+            <input class="input input-error" id="signup-pw2" type="password" placeholder="Re-enter password" autocomplete="new-password">
           </div>
-          <p class="error-msg" id="signup-err"></p>
+          <p class="error-msg hidden" id="signup-err"></p>
           <button class="btn btn-primary btn-block btn-lg" data-action="do-signup">Create account</button>
         </div>
 
       </div>
     </div>
   </section>
-  <section id="view-auth" class="view">
-  </section>
 
-
-   <!-- Screen- Onboarding -->
-  <section id="screen-onboarding" class="screen hidden ">
+  <!-- ============ Screen: Onboarding ============ -->
+  <section id="screen-onboarding" class="screen hidden">
     <div class="ob-bg">
       <div class="ob-card">
 
+        <!-- Progress dots -->
         <div id="ob-dots" class="ob-dots">
           <span class="dot active"></span>
           <span class="dot"></span>
           <span class="dot"></span>
         </div>
 
-      
-<div id="ob-step-1" class="ob-step ">
+        <!-- Step 1: Welcome -->
+        <div id="ob-step-1" class="ob-step">
+          <div class="ob-icon" data-icon="hand" data-icon-size="40"></div>
+          <h2>Welcome to NCEA Review Navigator</h2>
+          <p class="ob-desc">This dashboard uses spaced repetition to help you revise smarter (to prevent cramming)! It schedules each topic repeatedly at an amount of time so it sticks in your long-term memory until the EOY external.</p>
+          <p class="ob-desc">Let's set up your first subject to get started.</p>
+          <div class="ob-actions">
+            <button class="btn btn-primary btn-lg" data-action="ob-next">Get started →</button>
+            <button class="btn btn-ghost" data-action="ob-skip">Skip setup</button>
+          </div>
+        </div>
 
-  <div class="ob-icon"><i data-lucide="sparkles"></i></div>
-  <h2>Welcome to NCEA Review Navigator</h2>
-  <p class="ob-desc">This  spaced repetition web dashboard will help you revises in smarter way.  It schedules each topic repatedly so that knowledges can stay in your long-term memory.</p>
-  <p class="ob-desc">Now, lets set up your first subject to get started.</p>
-  <div class="ob-actions">
-    <button class="btn btn-primary btn-lg" data-action="ob-next">Get started -></button>
-    <button class="btn btn-ghost" data-action="ob-skip">Skip setup</button>
-  </div>
-</div>
+        <!-- Step 2: Pick a subject -->
+        <div id="ob-step-2" class="ob-step hidden">
+          <div class="ob-icon" data-icon="book-open" data-icon-size="40"></div>
+          <h2>Add your first subject</h2>
+          <p class="ob-desc">Pick one of the common NCEA subjects below, or type your own.</p>
+          <div class="field">
+            <label for="ob-subj-select">Subject</label>
+            <select class="input select-input" id="ob-subj-select">
+              <option value="">— Choose a subject —</option>
+              <option value="English" data-icon="notebook-pen">English</option>
+              <option value="Mathematics" data-icon="calculator">Mathematics</option>
+              <option value="Biology" data-icon="dna">Biology</option>
+              <option value="Chemistry" data-icon="flask-conical">Chemistry</option>
+              <option value="Physics" data-icon="atom">Physics</option>
+              <option value="History" data-icon="landmark">History</option>
+              <option value="Geography" data-icon="globe">Geography</option>
+              <option value="Economics" data-icon="trending-up">Economics</option>
+              <option value="__custom__" data-icon="book">Other (type your own)</option>
+            </select>
+          </div>
+          <div id="ob-custom-field" class="field hidden">
+            <label for="ob-custom">Subject name</label>
+            <input class="input" id="ob-custom" placeholder="e.g. Digital Technology">
+          </div>
+          <div class="ob-actions">
+            <button class="btn btn-primary btn-lg" data-action="ob-add-subject">Add subject →</button>
+          </div>
+        </div>
 
-
-<div id="ob-step-2" class="ob-step hidden ">
-
-  <div class="ob-icon" id="ob-subject-icon-display"><i data-lucide="book-open"></i></div>
-  <h2>Add your first subject</h2>
-  <p class="ob-desc">Pick one of the common NCEA subjects below, or type your own.</p>
-  <div class="field">
-    <label for="ob-subj-select">Subject</label>
-    
-    <select class="input select-input" id="ob-subj-select">
-      <option value="">— Choose a subject —</option>
-      <option>English</option>
-      <option value="Mathematics" data-icon="ruler" data-colour="#8B5CF6">Mathematics</option>
-      <option >Biology</option>
-      <option >Chemistry</option>
-      <option >Physics</option>
-      <option>History</option>
-      <option >Geography</option>
-      <option >Economics</option>
-      <option>Other (type your own)</option>
-    </select>
-  </div>
-  <div id="ob-custom-field" class="field hidden">
-    <label for="ob-custom">Subject name</label>
-    <input class="input" id="ob-custom" placeholder="e.g. Digital Technology">
-  </div>
-  <p class="error-msg hidden" id="ob-subject-err"></p>
-  <div class="ob-actions">
-    <button class="btn btn-primary btn-lg" data-action="ob-add-subject">Add subject +</button>
-  </div>
-</div>
-
-
-<div id="ob-step-3" class="ob-step hidden ">
-  
-  <div class="ob-icon"><i data-lucide="sprout"></i></div>
-  <h2>Add topics for <span id="ob-subject-name">your subject</span></h2>
-  <p class="ob-desc">Topics are the specific things you revise like standards, chapters, concepts. Add as many as you like now, or skip and add them later.</p>
-  <div class="field ob-topic-row">
-    <input class="input" id="ob-topic-input" placeholder="e.g. Photosynthesis, Organic compounds…">
-    <button class="btn btn-primary" data-action="ob-add-topic">Add</button>
-  </div>
-  <div id="ob-topic-chips" class="topic-chips"></div>
-  <p class="error-msg hidden" id="ob-topic-err"></p>
-  <div class="ob-actions">
-    <button class="btn btn-primary btn-lg" data-action="ob-finish">Finish setup -></button>
-    <button class="btn btn-ghost" data-action="ob-skip">Skip for now</button>
-  </div>
-</div>
+        <!-- Step 3: Add topics -->
+        <div id="ob-step-3" class="ob-step hidden">
+          <div class="ob-icon" data-icon="sprout" data-icon-size="40"></div>
+          <h2>Add topics for <span id="ob-subject-name">your subject</span></h2>
+          <p class="ob-desc">Topics are the specific things you revise like standards, chapters, concepts. Add as many as you like now, or you can skip and add them later.</p>
+          <div class="field ob-topic-row">
+            <input class="input" id="ob-topic-input" placeholder="e.g. Photosynthesis, Organic compounds…">
+            <button class="btn btn-primary" data-action="ob-add-topic">Add</button>
+          </div>
+          <div id="ob-topic-chips" class="topic-chips"></div>
+          <div class="ob-actions">
+            <button class="btn btn-primary btn-lg" data-action="ob-finish">Finish setup -></button>
+            <button class="btn btn-ghost" data-action="ob-skip">Skip for now</button>
+          </div>
+        </div>
 
       </div>
     </div>
   </section>
-  
 
 <script type="module" src="javascripts/main.js"></script>
 </body>

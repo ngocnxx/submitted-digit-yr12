@@ -18,7 +18,7 @@ const REQUEST_TIMEOUT_MS = 10000;
 export async function api(method, path, body) {
   trace(`api: ${method} ${path}`, USE_MOCK ? '→ MOCK backend' : '→ REAL backend (fetch)');
 
-  // ── Mock path (front-end only, ?mock or no real API configured) ──
+  //  Mock path (front-end only, ?mock or no real API configured)
   if (USE_MOCK) {
     const { mockApi } = await import('./api-mock.js');
     try {
