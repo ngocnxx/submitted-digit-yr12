@@ -53,3 +53,20 @@ export async function withPending(btn, pendingText, fn) {
     btn.textContent = original;
   }
 }
+
+// Brief bottom-of-screen notification for validation/API errors that don't
+// belong to a specific form field. Reuses one element across calls.
+let toastTimer;
+export function toast(message, ms = 3000) {
+  let el = document.getElementById('toast');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'toast';
+    el.className = 'toast';
+    document.body.appendChild(el);
+  }
+  el.textContent = message;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), ms);
+}

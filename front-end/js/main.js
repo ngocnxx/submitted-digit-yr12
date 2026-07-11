@@ -15,6 +15,11 @@ import {
   obFinish,
 } from './screens/onboarding.js';
 import { trace } from './debug.js';
+import { hydrateIcons } from './icons.js';
+
+// Tell the serve-guard script in index.html that the module app did boot,
+// so it doesn't flash the "this page needs to be served" hint on a working app.
+window.__NRN_BOOTED = true;
 
 // ── Global click delegation ──────────────────────────────────────
 document.body.addEventListener('click', async (e) => {
@@ -97,4 +102,8 @@ document.addEventListener('keydown', (e) => {
 
 // ── Startup ──────────────────────────────────────────────────────
 window.addEventListener('hashchange', route);
+hydrateIcons();
 route();
+hydrateIcons(); 
+
+

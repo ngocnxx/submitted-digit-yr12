@@ -20,7 +20,7 @@ export async function api(method, path, body) {
 
   //  Mock path (front-end only, ?mock or no real API configured)
   if (USE_MOCK) {
-    const { mockApi } = await import('./api-mock.js');
+    const { mockApi } = await import('./api.mock.js');
     try {
       const data = await mockApi(method, path, body, getToken());
       trace(`api: ${method} ${path} ← OK (mock)`);
