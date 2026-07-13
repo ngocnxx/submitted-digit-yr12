@@ -22,27 +22,25 @@ _ALGO = "HS256"  # symmetric signing with the app SECRET_KEY
 
 # passwords 
 
-
+  #scramble the passwords
 def hash_password(password: str) -> str:
-    # pbkdf2:sha256 is available on every OpenSSL build (werkzeug's newer scrypt
-    # default is not), so hashes stay portable across interpreters and containers.
+    
     return generate_password_hash(password, method="pbkdf2:sha256")
 
-
+ #compare plain passsword to the hash]
 def verify_password(password_hash: str, password: str) -> bool:
     # Constant-time comparison inside werkzeug — safe against timing attacks.
     return check_password_hash(password_hash, password)
 
 
 # tokens 
-
+ #mapping users data + UTC time 
 def encode_token(user_id: int) -> str:
-    """Mint a signed JWT for a user. Claims: sub=user id, iat=issued, exp=expiry."""
     now = dt.datetime.now(dt.timezone.utc)
     payload = {"sub": str(user_id), "iat": now, "exp": now + TOKEN_TTL}
     return jwt.encode(payload, current_app.config["SECRET_KEY"], algorithm=_ALGO)
 
-
+ #unlocks the otken
 def decode_token(token: str) -> int:
     """Return the user id from a valid token, or raise jwt.PyJWTError.
 
@@ -54,7 +52,7 @@ def decode_token(token: str) -> int:
 
 
 def _bearer_token() -> str | None:
-    """Pull the raw token out of an `Authorization: Bearer <token>` header."""
+    """Pull the raw token out of an `Authorisation: Bearer <token>` header."""
     header = request.headers.get("Authorization", "")
     if header.startswith("Bearer "):
         return header[len("Bearer ") :].strip()
@@ -75,7 +73,7 @@ def require_auth(view):
     def wrapper(*args, **kwargs):
         token = _bearer_token()
         # Trace the auth GATE every protected request passes through. We log only
-        # the outcome + user id — never the token or password.
+        # the outcome + user id, never the token or password.
         where = f"{request.method} {request.path}"
         if not token:
             print(f"[trace] require_auth: {where} → 401 (no token)")

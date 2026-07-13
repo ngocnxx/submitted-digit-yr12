@@ -12,31 +12,30 @@ from flask import current_app, g
 
 SCHEMA_PATH = Path(__file__).with_name("schema.sql")
 
-
+#finding the database path
 def _database_path() -> str:
-    """Resolve the SQLite file path from Flask config, falling back to env."""
+
     if current_app:
         return current_app.config["DATABASE_PATH"]
     return os.environ.get("DATABASE_PATH", "navigator.db")
 
-
+#open connection -> if connection is not present then create it
 def get_db() -> sqlite3.Connection:
-    """Return the per-request connection, creating it on first use."""
+
     if "db" not in g:
         conn = sqlite3.connect(_database_path())
         conn.row_factory = sqlite3.Row
-        conn.execute("PRAGMA foreign_keys = ON")
+        conn.execute("PRAGMA foreign_keys = ON") #turn on relational link
         g.db = conn
     return g.db
 
-
+#pull the data then completely destroy it (close connection)
 def close_db(_exception: BaseException | None = None) -> None:
-    """Teardown handler, close the request connection if it was opened."""
     db = g.pop("db", None)
     if db is not None:
         db.close()
 
-
+# build the tables
 def init_db(database_path: str | None = None) -> None:
     """Create all tables from schema.sql. Safe to run repeatedly (IF NOT EXISTS)."""
     path = database_path or _database_path()

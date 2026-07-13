@@ -1,37 +1,45 @@
-// App entry point — one delegated click listener routes every [data-action]
-// button to its handler, plus a few keyboard shortcuts. Modules are deferred,
-// so the DOM is already parsed when this runs.
 
-import { clearToken } from './api.js';
-import { $, closeModal } from './dom.js';
+// Composition root — imports every screen handler,  one delegated click listener + keyboard shortcuts, and starts the router. This is the only script  the HTML loads (`<script type="module" src="js/main.js">`).
+//import all these things from these files so i can use them
+import { api, clearToken } from './api.js';
+import { $, closeModal, toast } from './dom.js';
 import { state } from './state.js';
 import { navigate, route } from './router.js';
 import { doLogin, doSignup, setAuthMode } from './screens/auth.js';
 import {
-  obNext,
-  obSkip,
   obAddSubject,
   obAddTopic,
   obFinish,
+  obNext,
+  obSkip,
 } from './screens/onboarding.js';
-import { trace } from './debug.js';
+import { trace } from './debug.js'; // debug tracer (on with ?debug=1)
 import { hydrateIcons } from './icons.js';
 
-// Tell the serve-guard script in index.html that the module app did boot,
-// so it doesn't flash the "this page needs to be served" hint on a working app.
+// Signal that the ES-module graph loaded and ran. The classic serve-guard in
+// index.html checks this flag; if it's never set (e.g. opened via file://, where
+// browsers block module imports) it shows a "serve me" help card instead of a
+// blank page.
 window.__NRN_BOOTED = true;
 
-// ── Global click delegation ──────────────────────────────────────
+// ── Global click delegation ──
+//hey browser, stad guard at top page-> run this everytime users click on screen.
 document.body.addEventListener('click', async (e) => {
   // Let an open modal manage its own clicks first.
-  const overlay = $('#modal-overlay');
-  if (overlay && e.target.closest('#modal-overlay')) {
-    if (e.target.closest('[data-action="modal-cancel"]')) closeModal();
-    return;
+  if (e.target.closest('#modal-overlay')) {
+    // Backdrop-click close is handled in dom.js. Here we only special-case Cancel,
+    // then let real modal buttons (lr-submit, lr-attach) fall through to dispatch.
+    if (e.target.closest('[data-action="modal-cancel"]')) {
+      closeModal();
+      return;
+    }
   }
 
   const act = e.target.closest('[data-action]');
   if (!act) return;
+
+  // STEP 1 of the flow: a click on a [data-action] element is dispatched here.
+  trace('main: click →', act.dataset.action + (act.dataset.mode ? ` (mode=${act.dataset.mode})` : ''));
 
   try {
     switch (act.dataset.action) {
@@ -54,56 +62,55 @@ document.body.addEventListener('click', async (e) => {
         await obAddSubject(act);
         break;
       case 'ob-add-topic':
-        await obAddTopic();
+        obAddTopic();
         break;
       case 'ob-finish':
         await obFinish(act);
         break;
       case 'ob-skip':
-        await obSkip(act);
+        await obSkip();
         break;
 
-      // Top bar
+      // Navigation
       case 'nav-dashboard':
         navigate('#dashboard');
         break;
       case 'do-logout':
+        try {
+          await api('POST', '/api/auth/logout');
+        } catch {
+          /* logging out is best-effort */
+        }
         clearToken();
         state.currentUser = null;
         navigate('#');
+        route();
         break;
     }
   } catch (err) {
-    console.error('Action system caught an error:', err);
+    toast(err.message || 'Something went wrong');
   }
 });
 
-// ── Keyboard shortcuts ───────────────────────────────────────────
+// ── Keyboard shortcuts ──
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
-    const overlay = $('#modal-overlay');
-    if (overlay && overlay.classList.contains('show')) closeModal();
+    if ($('#modal-overlay').classList.contains('show')) closeModal();
     return;
   }
-
-  // Enter submits the auth form when the auth screen is visible.
+  // Enter submits the auth form.
   if (e.key === 'Enter' && !$('#screen-auth').classList.contains('hidden')) {
-    trace('main: Enter submits the', state.authMode, 'form');
+    trace('main: Enter key submits the', state.authMode, 'form');
     if (state.authMode === 'login') doLogin($('[data-action="do-login"]'));
     else doSignup($('[data-action="do-signup"]'));
-    return;
   }
-
-  // Enter adds a topic while typing in the onboarding topic field.
+  // Enter adds a topic in onboarding step 3.
   if (e.key === 'Enter' && document.activeElement?.id === 'ob-topic-input') {
     obAddTopic();
   }
 });
 
-// ── Startup ──────────────────────────────────────────────────────
+// ── Startup ──
 window.addEventListener('hashchange', route);
-hydrateIcons();
-route();
-hydrateIcons(); 
-
-
+route(); // modules are deferred, so the DOM is already parsed here.
+hydrateIcons(); // replace every static [data-icon] element with its Lucide SVG

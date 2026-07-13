@@ -1,3 +1,7 @@
+// In-browser mock backend — front-end-only dev (no Flask, no SQLite).
+
+// Enabled by `?mock=1` (see config.js USE_MOCK). 
+
 import { trace } from './debug.js';
 
 const DB_KEY = 'nrn_mock_db';
@@ -186,6 +190,9 @@ const routes = {
     return { topic: topicPublic(topic) };
   },
 
+  // Log a spaced-repetition review: advance the interval and store the optional
+  // accountability fields (evidence + reflection). Confidence is recorded but,
+  // per the spec, never changes the schedule.
   'POST /api/log-review': (db, body, token) => {
     const user = userFromToken(db, token);
     const topic = db.topics.find((t) => t.id === body.topicId && !t.archived);
@@ -205,8 +212,8 @@ const routes = {
       topicId: topic.id,
       reviewedDate,
       confidence: (body.confidence || '').trim() || null,
-      evidence: (body.evidence || '').trim() || null,
-      reflection: (body.reflection || '').trim() || null,
+      evidence: (body.evidence || '').trim() || null, // accountability field
+      reflection: (body.reflection || '').trim() || null, // accountability field
       interval,
       nextDue,
     };
@@ -216,7 +223,7 @@ const routes = {
   },
 };
 
-// Same signature the real api() uses internally; token is passed in so this
+// Same thing the real api() uses internally; token is passed in so this
 // module stays decoupled from api.js (no circular import).
 export async function mockApi(method, path, body, token) {
   await new Promise((r) => setTimeout(r, LATENCY_MS));

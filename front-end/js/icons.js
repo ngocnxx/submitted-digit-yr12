@@ -1,4 +1,7 @@
-
+// Lucide icons — vendored (copied) as inline SVG strings.
+//
+// SOURCE / ATTRIBUTION: Lucide, https://lucide.dev — open source, ISC License.
+// Every path string below is copied VERBATIM from Lucide.
 
 const ICONS = {
   dna: '<path d="m10 16 1.5 1.5"/><path d="m14 8-1.5-1.5"/><path d="M15 2c-1.798 1.998-2.518 3.995-2.807 5.993"/><path d="m16.5 10.5 1 1"/><path d="m17 6-2.891-2.891"/><path d="M2 15c6.667-6 13.333 0 20-6"/><path d="m20 9 .891.891"/><path d="M3.109 14.109 4 15"/><path d="m6.5 12.5 1 1"/><path d="m7 18 2.891 2.891"/><path d="M9 22c1.798-1.998 2.518-3.995 2.807-5.993"/>',
@@ -55,8 +58,10 @@ export function icon(name, { size = 20, cls = '' } = {}) {
 
 // Fill every element that has a data-icon="<name>" attribute with its SVG.
 // Lets static HTML declare icons (e.g. <div class="ob-icon" data-icon="hand">).
+// NOTE: <option> elements are skipped — options carry data-icon only as
+// metadata/documentation, and injecting an <svg> would blank their text label.
 export function hydrateIcons(root = document) {
-  root.querySelectorAll('[data-icon]').forEach((el) => {
+  root.querySelectorAll('[data-icon]:not(option)').forEach((el) => {
     const size = Number(el.dataset.iconSize) || 24;
     el.innerHTML = icon(el.dataset.icon, { size });
   });

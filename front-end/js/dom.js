@@ -1,4 +1,4 @@
-// DOM helpers : selectors, show/hide, HTML escaping, toast, and modal plumbing.
+// DOM helpers — selectors, show/hide, HTML escaping, toast, and modal plumbing.
 
 export const $ = (sel, root = document) => root.querySelector(sel); //sel (selector= what you're hunting for), searches the root = document ; $= grab 1 specific item
 export const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));//$$ grab every matching item on the screen; array  from packs the messy node list (of all the items) into clean js array(list)
@@ -10,7 +10,7 @@ export function hide(el) {
   if (el) el.classList.add('hidden');
 }
 
-// Escape user text before inserting into innerHTML (XSS-safe).
+// Escape user-supplied text before inserting into innerHTML (XSS-safe).
 export function esc(str) {
   return String(str ?? '')
     .replace(/&/g, '&amp;')
@@ -18,6 +18,17 @@ export function esc(str) {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
+}
+
+let toastTimer = null;
+export function toast(msg) {
+  const el = $('#toast');
+  if (!el) return;
+  el.textContent = msg;
+  void el.offsetWidth; // force reflow so the transition re-fires
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2200);
 }
 
 export function openModalFromHTML(html) {
@@ -52,21 +63,4 @@ export async function withPending(btn, pendingText, fn) {
     btn.disabled = false;
     btn.textContent = original;
   }
-}
-
-// Brief bottom-of-screen notification for validation/API errors that don't
-// belong to a specific form field. Reuses one element across calls.
-let toastTimer;
-export function toast(message, ms = 3000) {
-  let el = document.getElementById('toast');
-  if (!el) {
-    el = document.createElement('div');
-    el.id = 'toast';
-    el.className = 'toast';
-    document.body.appendChild(el);
-  }
-  el.textContent = message;
-  el.classList.add('show');
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => el.classList.remove('show'), ms);
 }

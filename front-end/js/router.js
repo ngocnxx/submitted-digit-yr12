@@ -1,14 +1,17 @@
+// Hash router — decides which screen is visible based on auth + onboarding
+// state and the current hash. Runs once on load and again on every hashchange.
+
+import { api, clearToken, getToken } from './api.js';
 import { $, hide, show } from './dom.js';
 import { state } from './state.js';
-import { trace } from './debug.js'; 
-import { hydrateAuth } from './screens/auth.js'; // Goes into sub-folder
+import { trace } from './debug.js'; // debug tracer (on with ?debug=1)
+import { hydrateAuth } from './screens/auth.js';
 import { hydrateOnboarding } from './screens/onboarding.js';
-import { api, getToken, clearToken } from './api.js';
 
 const SCREENS = [
   'screen-auth',
   'screen-onboarding',
-  'screen-dashboard'
+  'screen-dashboard',
 ];
 
 export function showScreen(id) {
@@ -47,7 +50,6 @@ export async function route() {
     }
   }
 
-  //  FIXED: The code is now safely nested inside the route() function!
   // Logged in but onboarding not finished → onboarding flow.
   if (!state.currentUser.onboarding_done) {
     trace('router: logged in, onboarding not done → ONBOARDING screen');
@@ -56,7 +58,11 @@ export async function route() {
     hydrateOnboarding();
     return;
   }
-
   trace('router: logged in + onboarded → DASHBOARD');
+
+  // Fully logged in — show topbar and the dashboard placeholder. (The dashboard,
+  // subject-detail and settings screens are slice-2 and not built yet, so there
+  // is no hash routing / render call here yet.)
+  show($('#topbar'));
   showScreen('screen-dashboard');
-} //  The function cleanly ends here now.
+}

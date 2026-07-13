@@ -9,12 +9,8 @@ export const clearToken = () => localStorage.removeItem(TOKEN_KEY);
 
 const REQUEST_TIMEOUT_MS = 10000;
 
-// Call the API. Adds the Bearer token, sends/receives JSON, times out if the
-// server is unreachable/slow, and throws an Error (with .status) carrying the
-// server's friendly message on failure.
-//
-// In front-end-only mode (config USE_MOCK) it routes to an in-browser mock with
-// the same contract instead of fetching — the rest of the app is unchanged.
+// Call the API. Adds the Bearer token, sends/receives JSON
+// In front-end-only mode (config USE_MOCK) it routes to an in-browser mock with the same contract instead of fetching so the rest of the app is unchanged.
 export async function api(method, path, body) {
   trace(`api: ${method} ${path}`, USE_MOCK ? '→ MOCK backend' : '→ REAL backend (fetch)');
 
