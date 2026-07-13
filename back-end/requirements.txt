@@ -11,3 +11,4 @@ gunicorn>=23,<24
 # --- dev / test ---
 pytest>=8,<9
 ruff>=0.8
+python-dotenv

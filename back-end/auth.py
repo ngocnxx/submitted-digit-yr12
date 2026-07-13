@@ -22,14 +22,14 @@ _ALGO = "HS256"  # symmetric signing with the app SECRET_KEY
 
 # passwords 
 
-  #scramble the passwords
+  #scramble the passwords (sign up)
 def hash_password(password: str) -> str:
     
     return generate_password_hash(password, method="pbkdf2:sha256")
 
- #compare plain passsword to the hash]
+ #compare plain passsword to the hash (log in to allow access)
 def verify_password(password_hash: str, password: str) -> bool:
-    # Constant-time comparison inside werkzeug — safe against timing attacks.
+    # Constant-time comparison inside werkzeug which safe against timing attacks.
     return check_password_hash(password_hash, password)
 
 
@@ -37,7 +37,7 @@ def verify_password(password_hash: str, password: str) -> bool:
  #mapping users data + UTC time 
 def encode_token(user_id: int) -> str:
     now = dt.datetime.now(dt.timezone.utc)
-    payload = {"sub": str(user_id), "iat": now, "exp": now + TOKEN_TTL}
+    payload = {"sub": str(user_id), "iat": now, "exp": now + TOKEN_TTL} #creating data package  then signs in the secret key
     return jwt.encode(payload, current_app.config["SECRET_KEY"], algorithm=_ALGO)
 
  #unlocks the otken
