@@ -1,6 +1,6 @@
-// Lucide icons — vendored (copied) as inline SVG strings.
-//
-// SOURCE / ATTRIBUTION: Lucide, https://lucide.dev — open source, ISC License.
+// Lucide icons: vendored (copied) as inline SVG strings.
+
+// SOURCE : Lucide, https://lucide.dev — open source, ISC License.
 // Every path string below is copied VERBATIM from Lucide.
 
 const ICONS = {
@@ -57,9 +57,7 @@ export function icon(name, { size = 20, cls = '' } = {}) {
 }
 
 // Fill every element that has a data-icon="<name>" attribute with its SVG.
-// Lets static HTML declare icons (e.g. <div class="ob-icon" data-icon="hand">).
-// NOTE: <option> elements are skipped — options carry data-icon only as
-// metadata/documentation, and injecting an <svg> would blank their text label.
+
 export function hydrateIcons(root = document) {
   root.querySelectorAll('[data-icon]:not(option)').forEach((el) => {
     const size = Number(el.dataset.iconSize) || 24;

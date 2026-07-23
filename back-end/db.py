@@ -35,14 +35,33 @@ def close_db(_exception: BaseException | None = None) -> None:
     if db is not None:
         db.close()
 
+# Columns added to schema.sql after navigator.db was first created. 
+_NEW_COLUMNS = {
+    "users": [("daily_cap", "INTEGER NOT NULL DEFAULT 5")],
+    "subjects": [("internal_mode", "INTEGER NOT NULL DEFAULT 0")],
+    "reviews": [("evidence", "TEXT"), ("reflection", "TEXT")],
+}
+
+
+def _migrate(conn: sqlite3.Connection) -> None:
+    for table, columns in _NEW_COLUMNS.items():
+        existing = {row[1] for row in conn.execute(f"PRAGMA table_info({table})")}
+        for name, ddl in columns:
+            if name not in existing:
+                conn.execute(f"ALTER TABLE {table} ADD COLUMN {name} {ddl}")
+    conn.commit()
+
+
 # build the tables
 def init_db(database_path: str | None = None) -> None:
-    """Create all tables from schema.sql. Safe to run repeatedly (IF NOT EXISTS)."""
+    """Create all tables from schema.sql, then migrate any pre-existing database
+    to pick up columns added since it was first created. Safe to run repeatedly."""
     path = database_path or _database_path()
     conn = sqlite3.connect(path)
     try:
         conn.executescript(SCHEMA_PATH.read_text(encoding="utf-8"))
         conn.commit()
+        _migrate(conn)
     finally:
         conn.close()
 

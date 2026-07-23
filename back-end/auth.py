@@ -44,7 +44,7 @@ def encode_token(user_id: int) -> str:
 def decode_token(token: str) -> int:
     """Return the user id from a valid token, or raise jwt.PyJWTError.
 
-    jwt.decode verifies the signature AND the `exp` claim, so an expired or
+    jwt.decode verifies the signature and the `exp` claim, so an expired or
     tampered token raises here rather than silently authenticating.
     """
     payload = jwt.decode(token, current_app.config["SECRET_KEY"], algorithms=[_ALGO])
@@ -71,6 +71,8 @@ def require_auth(view):
 
     @wraps(view)
     def wrapper(*args, **kwargs):
+        if request.method == "OPTIONS":
+            return "", 200
         token = _bearer_token()
         # Trace the auth GATE every protected request passes through. We log only
         # the outcome + user id, never the token or password.

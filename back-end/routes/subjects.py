@@ -19,6 +19,7 @@ def subject_public(row: sqlite3.Row) -> dict:
         "name": row["name"],
         "emoji": row["emoji"],
         "colour": row["colour"],
+        "internalMode": row["internal_mode"],
     }
 
 
@@ -32,6 +33,25 @@ def topic_public(row: sqlite3.Row) -> dict:
         "reviewCount": row["review_count"],
         "nextDue": row["next_due"],
     }
+
+
+def load_subjects(db: sqlite3.Connection, user_id: int) -> list[dict]:
+    """Active subjects (with internalMode) each carrying their active topics.
+    """
+    rows = db.execute(
+        "SELECT * FROM subjects WHERE user_id = ? AND archived = 0 ORDER BY created_at, id",
+        (user_id,),
+    ).fetchall()
+    subjects = []
+    for s in rows:
+        topics = db.execute(
+            "SELECT * FROM topics WHERE subject_id = ? AND archived = 0 ORDER BY created_at, id",
+            (s["id"],),
+        ).fetchall()
+        item = subject_public(s)
+        item["topics"] = [topic_public(t) for t in topics]
+        subjects.append(item)
+    return subjects
 
 
 @bp.post("")
@@ -64,19 +84,4 @@ def create_subject():
 def list_subjects():
     """Subjects for the current user, each with its (non-archived) topics."""
     db = get_db()
-    subjects = db.execute(
-        "SELECT * FROM subjects WHERE user_id = ? AND archived = 0 ORDER BY created_at",
-        (g.user_id,),
-    ).fetchall()
-
-    result = []
-    for s in subjects:
-        topics = db.execute(
-            "SELECT * FROM topics WHERE subject_id = ? AND archived = 0 ORDER BY created_at",
-            (s["id"],),
-        ).fetchall()
-        item = subject_public(s)
-        item["topics"] = [topic_public(t) for t in topics]
-        result.append(item)
-
-    return jsonify(subjects=result)
+    return jsonify(subjects=load_subjects(db, g.user_id))

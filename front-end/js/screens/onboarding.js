@@ -71,7 +71,7 @@ export async function obAddSubject(btn) {
     toast('Pick a subject first');
     return;
   }
-  // No emoji stored — the dashboard picks a Lucide icon from the subject name
+  // No emoji stored- the dashboard picks a Lucide icon from the subject name
   // (see icons.js subjectIcon). Options carry data-icon just for documentation.
   let name, colour;
   if (sel.value === '__custom__') {

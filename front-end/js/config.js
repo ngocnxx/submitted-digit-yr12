@@ -1,7 +1,5 @@
 
 // Configuration & constants.
-// Split-origin setup: the API runs on a different origin to this static SPA,
-// published host port is 5050 (see docker-compose.yml). Keep this in sync with it.
 
 //established
 export const API_BASE = window.NRN_API_BASE || 'http://127.0.0.1:5050'; //door number that the flask is running. || = or, can define  window.NRN_API_BASE for the actual web

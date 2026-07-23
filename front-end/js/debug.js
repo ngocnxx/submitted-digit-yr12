@@ -1,11 +1,8 @@
-// Debug tracer — a learning/debugging aid for following the app end-to-end.
+// Debug tracer ; a learning/debugging aid for following the app end-to-end.
 //
 // OFF by default (zero console noise in normal use). Turn it ON by opening the
 // app with ?debug=1 in the URL like e.g.  http://127.0.0.1:5500/?debug=1
-// (or set window.NRN_DEBUG = true before the modules load).
 
-// trace(...) is just console.log under the hood where output shows in DevTools →
-// Console. To find/remove every trace later:  the codebase for `trace(`.
 export const DEBUG =
   new URLSearchParams(window.location.search).has('debug') || window.NRN_DEBUG === true;
 

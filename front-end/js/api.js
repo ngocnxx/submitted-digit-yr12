@@ -1,4 +1,4 @@
-// Server communication — token storage + a thin fetch() wrapper.
+// Server communication- token storage + a thin fetch() wrapper.
 
 import { API_BASE, TOKEN_KEY, USE_MOCK } from './config.js';
 import { trace } from './debug.js';
@@ -10,11 +10,10 @@ export const clearToken = () => localStorage.removeItem(TOKEN_KEY);
 const REQUEST_TIMEOUT_MS = 10000;
 
 // Call the API. Adds the Bearer token, sends/receives JSON
-// In front-end-only mode (config USE_MOCK) it routes to an in-browser mock with the same contract instead of fetching so the rest of the app is unchanged.
 export async function api(method, path, body) {
   trace(`api: ${method} ${path}`, USE_MOCK ? '→ MOCK backend' : '→ REAL backend (fetch)');
 
-  //  Mock path (front-end only, ?mock or no real API configured)
+  //  Mock path (front-end only, ?mock or no real API configured -> used for early stage test)
   if (USE_MOCK) {
     const { mockApi } = await import('./api.mock.js');
     try {
@@ -27,7 +26,7 @@ export async function api(method, path, body) {
     }
   }
 
-  // ── Real path (Flask) ──
+  //  Real path (Flask)
   const opts = { method, headers: {} };
   const tok = getToken();
   if (tok) opts.headers['Authorization'] = 'Bearer ' + tok;

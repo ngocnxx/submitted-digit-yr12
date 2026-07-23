@@ -1,13 +1,5 @@
 // Auth screen (#screen-auth) — login + create-account forms.
 
-// Responsibilities: read the form inputs, run  client-side validation, call
-// the auth API (mock or Flask via api()), and on success store the JWT and route
-// to the dashboard. Every failure surfaces as a friendly message in the screen's
-// `.error-msg` slot  never a blank screen or a raw error.
-//
-// DEBUG: this file is traced end-to-end. Open the app with ?debug=1 and watch the
-// Console to follow each step. trace(...) is console.log gated by that flag.
-
 import { api, setToken } from '../api.js';
 import { $, $$, hide, show, withPending } from '../dom.js';
 import { state } from '../state.js';
@@ -36,8 +28,7 @@ export function hydrateAuth() {
 }
 
 // Switch between the login and signup tabs: highlight the active tab and reveal
-// the matching form (the other is hidden). Records the mode so the Enter-key
-// shortcut in main.js knows which form to submit.
+// the matching form (the other is hidden).
 export function setAuthMode(mode) {
   trace('auth: setAuthMode →', mode);
   state.authMode = mode;
@@ -48,15 +39,13 @@ export function setAuthMode(mode) {
   $('#auth-signup').classList.toggle('hidden', mode !== 'signup');
 }
 
-// Handle a "Sign in" click. `btn` is the clicked button so withPending() can
-// disable it and show a pending label for the duration of the request (which both
-// gives feedback and prevents a double-submit).
+// Handle a "Sign in" click. 
 export async function doLogin(btn) {
   trace('auth: doLogin() start');
   const err = $('#login-err');
   hide(err);
 
-  // Layer 1 — client-side guard: avoid a pointless round-trip on empty input.
+  // Layer 1- client-side guard: avoid a pointless round-trip on empty input.
   const email = $('#login-email').value.trim();
   const password = $('#login-pw').value;
   if (!email || !password) {
@@ -66,12 +55,9 @@ export async function doLogin(btn) {
     return;
   }
 
-  // Tip: an alert() is a quick "freeze and look" probe, but it BLOCKS the page —
-  // never leave one in shipped code. Uncomment to try it once, then remove:
-  //   alert('about to call the login API for ' + email);
-
+  
   try {
-    // Layer 2 — the backend authenticates. On success it returns { token, user }.
+    // Layer 2— the backend authenticates. On success it returns { token, user }.
     trace('auth: doLogin → POST /api/auth/login', { email }); // never log the password
     const r = await withPending(btn, 'Signing in…', () =>
       api('POST', '/api/auth/login', { email, password }),
@@ -88,17 +74,13 @@ export async function doLogin(btn) {
   }
 }
 
-// Handle a "Create account" click. Runs three client-side guards (required fields,
-// passwords match, min length) BEFORE the network call; the backend still
-// re-validates everything and owns duplicate-email detection (→ 400).
+// Handle a "Create account" click. 
 export async function doSignup(btn) {
   trace('auth: doSignup() start');
   const err = $('#signup-err');
   hide(err);
 
-  // Grab the two password fields as ELEMENTS (not just their values) so we can
-  // toggle the red `.input-error` highlight on them. Clear any highlight left
-  // over from a previous attempt before we re-validate.
+  // Grab the two password fields as ELEMENTS (not just their values) so we can TOGGLE
   const pw = $('#signup-pw');
   const pw2 = $('#signup-pw2');
   pw.classList.remove('input-error');

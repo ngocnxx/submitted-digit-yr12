@@ -12,6 +12,7 @@ from flask_cors import CORS
 import db
 from errors import ApiError
 from routes.auth import bp as auth_bp
+from routes.reviews import bp as reviews_bp
 from routes.subjects import bp as subjects_bp
 from routes.topics import bp as topics_bp
 from routes.user import bp as user_bp
@@ -30,10 +31,11 @@ def create_app(config: dict | None = None) -> Flask:
     CORS(app, resources={r"/api/*": {"origins": os.environ.get("CORS_ORIGIN", "*")}}); 
 
     """Resources blueprint"""
-    app.register_blueprint(auth_bp); 
+    app.register_blueprint(auth_bp);
     app.register_blueprint(user_bp)
     app.register_blueprint(subjects_bp)
     app.register_blueprint(topics_bp)
+    app.register_blueprint(reviews_bp)
 
     app.teardown_appcontext(db.close_db)
     """JSON error handlers"""

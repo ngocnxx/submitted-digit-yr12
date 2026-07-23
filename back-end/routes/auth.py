@@ -33,11 +33,7 @@ def _fetch_user(db: sqlite3.Connection, user_id: int) -> sqlite3.Row | None:
 #sign up 
 @bp.post("/signup")
 def signup():
-    """Create an account → 201 { token, user }, logging the new user straight in.
-
-    Validation: name/email required andÅ length-bounded (require_str); password
-    >= MIN_PASSWORD_LEN. A duplicate email trips the UNIQUE constraint and is
-    reported as a friendly 400 (see the IntegrityError branch below).
+    """Create an account -> 201 { token, user }, logging the new user straight in.
     """
     data = request.get_json(silent=True) or {}
     name = require_str(data.get("name"), "name")
@@ -70,11 +66,10 @@ def signup():
 
 @bp.post("/login")
 def login():
-    """Authenticate → 200 { token, user }.
+    """Authenticate -> 200 { token, user }.
 
     Returns one 401 "Incorrect email or password." whether the email is unknown
-    or the password is wrong — never revealing which, so valid emails can't be
-    enumerated. Email lookup is case-insensitive (COLLATE NOCASE).
+    or the password is wrong."
     """
     data = request.get_json(silent=True) or {}
     email = (data.get("email") or "").strip()
@@ -96,9 +91,9 @@ def login():
 @bp.get("/me")
 @require_auth
 def me():
-    """Rehydrate a session from a Bearer token → 200 { user }.
+    """Rehydrate a session from a Bearer token -? 200 { user }.
 
-    The SPA calls this on load when it has a stored token but no user in memory
+    When it has a stored token but no user in memory
     (e.g. after a page refresh). @require_auth has already verified the token and
     set g.user_id; a 401 here means the account no longer exists.
     """
@@ -112,5 +107,5 @@ def me():
 @bp.post("/logout")
 @require_auth
 def logout():
-    # Stateless JWTs: the client discards the token. Endpoint exists for symmetry.
+    # Stateless JWTs: the client discards the token. 
     return jsonify(ok=True)
