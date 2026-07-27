@@ -1,4 +1,4 @@
-// Server communication- token storage + a thin fetch() wrapper.
+// Handles all server requests and stores the login token.
 
 import { API_BASE, TOKEN_KEY, USE_MOCK } from './config.js';
 import { trace } from './debug.js';
@@ -9,11 +9,11 @@ export const clearToken = () => localStorage.removeItem(TOKEN_KEY);
 
 const REQUEST_TIMEOUT_MS = 10000;
 
-// Call the API. Adds the Bearer token, sends/receives JSON
+// Send a request to the server with the login token
 export async function api(method, path, body) {
   trace(`api: ${method} ${path}`, USE_MOCK ? '→ MOCK backend' : '→ REAL backend (fetch)');
 
-  //  Mock path (front-end only, ?mock or no real API configured -> used for early stage test)
+  // Use the mock backend (for testing without Flask)
   if (USE_MOCK) {
     const { mockApi } = await import('./api.mock.js');
     try {
@@ -26,7 +26,7 @@ export async function api(method, path, body) {
     }
   }
 
-  //  Real path (Flask)
+  // Real server request
   const opts = { method, headers: {} };
   const tok = getToken();
   if (tok) opts.headers['Authorization'] = 'Bearer ' + tok;
@@ -35,7 +35,7 @@ export async function api(method, path, body) {
     opts.body = JSON.stringify(body);
   }
 
-  // Abort the request if it stalls, so the UI never hangs on a dead server.
+  // Stop the request if the server takes too long
   const ac = new AbortController();
   opts.signal = ac.signal;
   const timer = setTimeout(() => ac.abort(), REQUEST_TIMEOUT_MS);

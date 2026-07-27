@@ -11,8 +11,10 @@ from flask_cors import CORS
 
 import db
 from errors import ApiError
+from routes.assessment import bp as assessment_bp
 from routes.auth import bp as auth_bp
 from routes.reviews import bp as reviews_bp
+from routes.settings import bp as settings_bp
 from routes.subjects import bp as subjects_bp
 from routes.topics import bp as topics_bp
 from routes.user import bp as user_bp
@@ -36,6 +38,8 @@ def create_app(config: dict | None = None) -> Flask:
     app.register_blueprint(subjects_bp)
     app.register_blueprint(topics_bp)
     app.register_blueprint(reviews_bp)
+    app.register_blueprint(settings_bp)
+    app.register_blueprint(assessment_bp)
 
     app.teardown_appcontext(db.close_db)
     """JSON error handlers"""

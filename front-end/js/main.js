@@ -1,5 +1,5 @@
 
-// Composition root that imports every screen handler,  one delegated click listener + keyboard shortcuts, and starts the router. This is the only script  the HTML loads (`<script type="module" src="js/main.js">`).
+// Main entry point. Sets up the global click handler and keyboard shortcuts.
 //import all these things from these files so i can use them
 import { api, clearToken } from './api.js';
 import { $, closeModal, toast } from './dom.js';
@@ -17,17 +17,17 @@ import { trace } from './debug.js'; // debug tracer (on with ?debug=1)
 import { hydrateIcons } from './icons.js';
 import { setDashTab } from './screens/dashboard.js';
 import { attachFile, openLogReview, submitLogReview } from './screens/log-review.js';
+import { onToggleInternal } from './screens/subject-detail.js';
 import { openAddSubject, openAddTopic, submitAddSubject, submitAddTopic } from './screens/add.js';
 // Signal that the ES-module graph loaded and ran.
 window.__NRN_BOOTED = true;
 
-//  Global click delegation 
+// Global click handler
 //hey browser, stad guard at top page-> run this everytime users click on screen.
 document.body.addEventListener('click', async (e) => {
   // Let an open modal manage its own clicks first.
   if (e.target.closest('#modal-overlay')) {
-    // Backdrop-click close is handled in dom.js. Here we only special-case Cancel,
-    // then let real modal buttons (lr-submit, lr-attach) fall through to dispatch.
+    // Only handle Cancel here; other modal buttons fall through below
     if (e.target.closest('[data-action="modal-cancel"]')) {
       closeModal();
       return;
@@ -37,7 +37,7 @@ document.body.addEventListener('click', async (e) => {
   const act = e.target.closest('[data-action]');
   if (!act) return;
 
-  // STEP 1 of the flow: a click on a [data-action] element is dispatched here.
+  // Work out which action was clicked
   trace('main: click →', act.dataset.action + (act.dataset.mode ? ` (mode=${act.dataset.mode})` : ''));
 
 
@@ -75,6 +75,9 @@ document.body.addEventListener('click', async (e) => {
       case 'dash-tab':
         setDashTab(act.dataset.tab);
         break;
+      case 'view-subject':
+        navigate('#subject-' + act.dataset.subjectId);
+        break;
       case 'open-log': {
         // Look the topic up fresh, then open the modal; refresh the screen on save.
         const tid = Number(act.dataset.topicId);
@@ -89,7 +92,10 @@ document.body.addEventListener('click', async (e) => {
       case 'lr-attach':
         attachFile();
         break;
-     
+      case 'toggle-internal':
+        onToggleInternal(act.dataset.subjectId);
+        break;
+
       // Add subject / add topic (modals, refresh the screen on success)
       case 'add-subject':
         openAddSubject(route);
@@ -107,6 +113,9 @@ document.body.addEventListener('click', async (e) => {
       // Navigation
       case 'nav-dashboard':
         navigate('#dashboard');
+        break;
+      case 'nav-settings':
+        navigate('#settings');
         break;
       case 'do-logout':
         try {

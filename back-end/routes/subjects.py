@@ -1,4 +1,4 @@
-"""Subject routes — create a subject, and list subjects (+topics) for the dashboard."""
+"""Routes for creating and listing subjects."""
 
 from __future__ import annotations
 
@@ -6,7 +6,9 @@ import sqlite3
 
 from flask import Blueprint, g, jsonify, request
 
+import scheduling
 from auth import require_auth
+from clock import today
 from db import get_db
 from errors import ApiError, require_str
 
@@ -35,9 +37,18 @@ def topic_public(row: sqlite3.Row) -> dict:
     }
 
 
+def review_public(row: sqlite3.Row) -> dict:
+    return {
+        "reviewedDate": row["reviewed_date"],
+        "confidence": row["confidence"],
+        "evidence": row["evidence"],
+        "reflection": row["reflection"],
+        "nextDue": row["next_due"],
+    }
+
+
 def load_subjects(db: sqlite3.Connection, user_id: int) -> list[dict]:
-    """Active subjects (with internalMode) each carrying their active topics.
-    """
+    """Load all subjects and their topics for this user."""
     rows = db.execute(
         "SELECT * FROM subjects WHERE user_id = ? AND archived = 0 ORDER BY created_at, id",
         (user_id,),
@@ -82,6 +93,19 @@ def create_subject():
 @bp.get("")
 @require_auth
 def list_subjects():
-    """Subjects for the current user, each with its (non-archived) topics."""
+    """Return all subjects with their topics and review history."""
     db = get_db()
-    return jsonify(subjects=load_subjects(db, g.user_id))
+    subjects = load_subjects(db, g.user_id)
+    now = today()
+    for s in subjects:
+        for t in s["topics"]:
+            st = scheduling.status_of(t, now)
+            t["status"] = st["status"]
+            t["statusLabel"] = scheduling.status_label(st)
+            history = db.execute(
+                "SELECT * FROM reviews WHERE topic_id = ? ORDER BY id",
+                (t["id"],),
+            ).fetchall()
+            t["reviews"] = [review_public(r) for r in history]
+        s["coverage"] = scheduling.coverage(s["topics"])
+    return jsonify(subjects=subjects)

@@ -1,4 +1,4 @@
-// Hash router that decides which screen is visible based on auth + onboarding
+// Router that shows the right screen based on the URL hash and login state.
 
 
 import { api, clearToken, getToken } from './api.js';
@@ -8,11 +8,15 @@ import { trace } from './debug.js'; // debug tracer (on with ?debug=1)
 import { hydrateAuth } from './screens/auth.js';
 import { hydrateOnboarding } from './screens/onboarding.js';
 import { renderDashboard } from './screens/dashboard.js';
+import { renderSubjectDetail } from './screens/subject-detail.js';
+import { renderSettings } from './screens/settings.js';
 
 const SCREENS = [
   'screen-auth',
   'screen-onboarding',
   'screen-dashboard',
+  'screen-subject',
+  'screen-settings',
 ];
 
 export function showScreen(id) {
@@ -28,7 +32,7 @@ export function navigate(hash) {
 }
 
 export async function route() {
-  // The router decides which screen to show. Trace its inputs every time it runs.
+  // Trace what the router is doing each time it runs
   trace('router: route()', { hash: location.hash || '#', hasToken: !!getToken() });
 
   // No token -> not logged in -> show auth.
@@ -41,7 +45,7 @@ export async function route() {
     return;
   }
 
-  // Have a token but no user object yet then fetch it (token may be expired).
+  // No user info yet, so fetch it from the server
   if (!state.currentUser) {
     try {
       state.currentUser = (await api('GET', '/api/auth/me')).user;
@@ -51,7 +55,7 @@ export async function route() {
     }
   }
 
-  // Logged in but onboarding not finished then toonboarding flow.
+  // Still setting up? Send to onboarding
   if (!state.currentUser.onboarding_done) {
     trace('router: logged in, onboarding not done → ONBOARDING screen');
     hide($('#topbar'));
@@ -61,11 +65,20 @@ export async function route() {
   }
   trace('router: logged in + onboarded → DASHBOARD');
 
-  // Fully logged in which show topbar and render the dashboard. 
+  // Logged in and ready, show the right screen
   show($('#topbar'));
-  showScreen('screen-dashboard');
+  const hash = location.hash || '#dashboard';
   try {
-    await renderDashboard();
+    if (hash === '#settings') {
+      showScreen('screen-settings');
+      await renderSettings();
+    } else if (hash.startsWith('#subject-')) {
+      showScreen('screen-subject');
+      await renderSubjectDetail(hash.slice('#subject-'.length));
+    } else {
+      showScreen('screen-dashboard');
+      await renderDashboard();
+    }
   } catch (e) {
     toast(e.message || 'Something went wrong');
   }

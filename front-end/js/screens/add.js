@@ -19,14 +19,26 @@ function showErr(msg) {
 export function openAddSubject(onDone) {
   trace('add: open Add Subject modal');
   pending = { onDone };
+  // A real <select>, NOT an <input list="...">/<datalist>. A datalist filters its
+  // options by whatever text is already in the box, so once "English" is chosen
+  // re-opening the list shows only "English" — the user has to clear the field by
+  // hand before they can pick anything else. A <select> always offers every
+  // option, every time. Same control the onboarding step-2 picker uses.
   openModalFromHTML(`
     <div class="modal-card">
       <h2>Add subject</h2>
       <p class="modal-sub">Pick a common NCEA subject or type your own.</p>
       <div class="field">
-        <label for="add-subj">Subject</label>
-        <input class="input" id="add-subj" list="add-subj-list" placeholder="e.g. Biology" autocomplete="off">
-        <datalist id="add-subj-list">${COMMON.map((s) => `<option value="${s}"></option>`).join('')}</datalist>
+        <label for="add-subj-select">Subject</label>
+        <select class="input select-input" id="add-subj-select">
+          <option value="">— Choose a subject —</option>
+          ${COMMON.map((s) => `<option value="${esc(s)}">${esc(s)}</option>`).join('')}
+          <option value="__custom__">Other (type your own)</option>
+        </select>
+      </div>
+      <div class="field hidden" id="add-custom-field">
+        <label for="add-subj">Subject name</label>
+        <input class="input" id="add-subj" placeholder="e.g. Digital Technology" autocomplete="off">
       </div>
       <p class="error-msg hidden" id="add-err"></p>
       <div class="modal-actions">
@@ -34,12 +46,23 @@ export function openAddSubject(onDone) {
         <button class="btn btn-primary" data-action="add-subject-submit">Add subject</button>
       </div>
     </div>`);
-  setTimeout(() => $('#add-subj')?.focus(), 30);
+
+  // Reveal the free-text box only for "Other" (mirrors onboarding's behaviour).
+  const sel = $('#add-subj-select');
+  sel.onchange = () => {
+    const isCustom = sel.value === '__custom__';
+    $('#add-custom-field').classList.toggle('hidden', !isCustom);
+    if (isCustom) $('#add-subj').focus();
+    trace('add: subject select →', sel.value);
+  };
+  setTimeout(() => sel.focus(), 30);
 }
 
 export async function submitAddSubject(btn) {
-  const name = $('#add-subj').value.trim();
-  if (!name) return showErr('Please type a subject name.');
+  const sel = $('#add-subj-select');
+  const isCustom = sel.value === '__custom__';
+  const name = (isCustom ? $('#add-subj').value : sel.value).trim();
+  if (!name) return showErr(isCustom ? 'Please type a subject name.' : 'Please choose a subject.');
   try {
     trace('add: POST /api/subjects', { name });
     await withPending(btn, 'Adding…', () => api('POST', '/api/subjects', { name }));

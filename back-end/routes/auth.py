@@ -1,5 +1,4 @@
-"""Auth routes; signup, login, me, logout.
-"""
+"""Auth routes: sign up, log in, get user info, log out."""
 
 from __future__ import annotations
 
@@ -13,17 +12,18 @@ from errors import ApiError, require_str
 
 bp = Blueprint("auth", __name__, url_prefix="/api/auth")
 
-MIN_PASSWORD_LEN = 6
+MIN_PASSWORD_LEN = 4
 
 #repackages safe public info to send bak
 def user_public(row: sqlite3.Row) -> dict:
-    """The user fields safe to return to the client (never the password hash)."""
+    """User info safe to send back (no password)."""
     return {
         "id": row["id"],
         "name": row["name"],
         "email": row["email"],
         "yearLevel": row["year_level"],
         "onboarding_done": row["onboarding_done"],
+        "dailyCap": row["daily_cap"],
     }
 
 
@@ -33,8 +33,7 @@ def _fetch_user(db: sqlite3.Connection, user_id: int) -> sqlite3.Row | None:
 #sign up 
 @bp.post("/signup")
 def signup():
-    """Create an account -> 201 { token, user }, logging the new user straight in.
-    """
+    """Sign up and log in straight away."""
     data = request.get_json(silent=True) or {}
     name = require_str(data.get("name"), "name")
     email = require_str(data.get("email"), "email")
@@ -66,11 +65,7 @@ def signup():
 
 @bp.post("/login")
 def login():
-    """Authenticate -> 200 { token, user }.
-
-    Returns one 401 "Incorrect email or password." whether the email is unknown
-    or the password is wrong."
-    """
+    """Check email and password, return a token if correct."""
     data = request.get_json(silent=True) or {}
     email = (data.get("email") or "").strip()
     password = data.get("password") or ""
@@ -91,12 +86,7 @@ def login():
 @bp.get("/me")
 @require_auth
 def me():
-    """Rehydrate a session from a Bearer token -? 200 { user }.
-
-    When it has a stored token but no user in memory
-    (e.g. after a page refresh). @require_auth has already verified the token and
-    set g.user_id; a 401 here means the account no longer exists.
-    """
+    """Get the logged-in user's info using their saved token."""
     print(f"[trace] GET /api/auth/me user_id={g.user_id}", flush=True)  # debug
     row = _fetch_user(get_db(), g.user_id)
     if row is None:
@@ -107,5 +97,5 @@ def me():
 @bp.post("/logout")
 @require_auth
 def logout():
-    # Stateless JWTs: the client discards the token. 
+    # Just tell the client to delete the token
     return jsonify(ok=True)

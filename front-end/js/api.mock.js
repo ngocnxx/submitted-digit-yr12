@@ -1,8 +1,9 @@
-// In-browser mock backend — front-end-only dev (no Flask, no SQLite).
+// In-browser mock backend- front-end-only dev (no Flask, no SQLite).
 
 // Enabled by `?mock=1` (see config.js USE_MOCK). 
 
 import { trace } from './debug.js';
+import { addDaysISO, buildPriorities, coverageOf, intervalFor, todayISO } from './schedule.js';
 
 const DB_KEY = 'nrn_mock_db';
 const MIN_PASSWORD_LEN = 4;
@@ -16,13 +17,13 @@ function load() {
   } catch {
     db = blank();
   }
-  db.reviews = db.reviews || []; // added in v3 — keep older saved DBs working
+  db.reviews = db.reviews || []; // added later, keeps old saved data working
   return db;
 }
 
 function blank() {
   return { 
-    // Seeded test account so  don't get the "empty room" login error!
+    // Seeded test account so  don't get the "empty room" login error.
     users: [
       {
         id: 1,
@@ -49,7 +50,7 @@ function nextId(db) {
   return db.seq;
 }
 
-// Mirror of errors.py: throws an Error carrying .status, like the real api().
+// Throws an error the same way the real server does
 function fail(message, status = 400) {
   const err = new Error(message);
   err.status = status;
@@ -70,15 +71,32 @@ function userFromToken(db, token) {
   return user;
 }
 
-// Serialisers — match the Flask route shapes.
+// Build subject list in the same format as the real server
+function subjectsForUser(db, user) {
+  return db.subjects
+    .filter((s) => s.userId === user.id && !s.archived)
+    .map((s) => ({
+      ...subjectPublic(s),
+      topics: db.topics.filter((t) => t.subjectId === s.id && !t.archived).map(topicPublic),
+    }));
+}
+
+// Format data to match what the real server sends back
 const userPublic = (u) => ({
   id: u.id,
   name: u.name,
   email: u.email,
   yearLevel: u.yearLevel,
   onboarding_done: u.onboarding_done,
+  dailyCap: u.dailyCap ?? 5,
 });
-const subjectPublic = (s) => ({ id: s.id, name: s.name, emoji: s.emoji, colour: s.colour });
+const subjectPublic = (s) => ({
+  id: s.id,
+  name: s.name,
+  emoji: s.emoji,
+  colour: s.colour,
+  internalMode: s.internalMode ? 1 : 0,
+});
 const topicPublic = (t) => ({
   id: t.id,
   subjectId: t.subjectId,
@@ -89,7 +107,7 @@ const topicPublic = (t) => ({
   nextDue: t.nextDue,
 });
 
-// Route table keyed by "METHOD path". Each handler gets (db, body, token).
+// All the mock routes, matched by "METHOD path"
 const routes = {
   'POST /api/auth/signup': (db, body) => {
     const name = requireStr(body.name, 'name');
@@ -168,6 +186,67 @@ const routes = {
     return { subjects };
   },
 
+  // Today's priority feed, same logic as the real server
+  'GET /api/priorities': (db, _body, token) => {
+    const user = userFromToken(db, token);
+    const subjects = subjectsForUser(db, user);
+    const feed = buildPriorities(subjects, user.dailyCap ?? 5);
+    const allTopics = subjects.flatMap((s) => s.topics);
+    feed.coverage = coverageOf(allTopics);
+    feed.reviewedCount = allTopics.filter((t) => (t.reviewCount || 0) >= 1).length;
+    feed.totalTopics = allTopics.length;
+    return feed;
+  },
+
+  'PUT /api/settings': (db, body, token) => {
+    const user = userFromToken(db, token);
+    const cap = Number(body.dailyCap);
+    if (!Number.isFinite(cap)) fail('Daily cap must be a number.');
+    user.dailyCap = Math.max(3, Math.min(8, cap)); // clamp, never reject
+    save(db);
+    return { dailyCap: user.dailyCap };
+  },
+
+  'POST /api/assessment-mode-start': (db, body, token) => {
+    const user = userFromToken(db, token);
+    const subject = db.subjects.find(
+      (s) => s.id === body.subjectId && s.userId === user.id && !s.archived,
+    );
+    if (!subject) fail('That subject could not be found.', 404);
+    subject.internalMode = 1; // paused, hidden from the review feed
+    save(db);
+    return { ok: true };
+  },
+
+  'POST /api/assessment-mode-end': (db, body, token) => {
+    const user = userFromToken(db, token);
+    const subject = db.subjects.find(
+      (s) => s.id === body.subjectId && s.userId === user.id && !s.archived,
+    );
+    if (!subject) fail('That subject could not be found.', 404);
+    const today = todayISO();
+    const nextDue = addDaysISO(today, 7);
+    db.topics
+      .filter((t) => t.subjectId === subject.id && !t.archived)
+      .forEach((t) => {
+        t.reviewCount = Math.max(t.reviewCount || 0, 3); // catch up, never rewind
+        t.nextDue = nextDue;
+        db.reviews.push({
+          id: nextId(db),
+          topicId: t.id,
+          reviewedDate: today,
+          confidence: 'internal_assessment',
+          evidence: null,
+          reflection: null,
+          interval: 7,
+          nextDue,
+        });
+      });
+    subject.internalMode = 0;
+    save(db);
+    return { ok: true };
+  },
+
   'POST /api/topics': (db, body, token) => {
     const user = userFromToken(db, token);
     const name = requireStr(body.name, 'topic name');
@@ -190,9 +269,7 @@ const routes = {
     return { topic: topicPublic(topic) };
   },
 
-  // Log a spaced-repetition review: advance the interval and store the optional
-  // accountability fields (evidence + reflection). Confidence is recorded but,
-  // per the spec, never changes the schedule.
+  // Record a review and move the topic's next due date forward
   'POST /api/log-review': (db, body, token) => {
     const user = userFromToken(db, token);
     const topic = db.topics.find((t) => t.id === body.topicId && !t.archived);
@@ -223,8 +300,7 @@ const routes = {
   },
 };
 
-// Same thing the real api() uses internally; token is passed in so this
-// module stays decoupled from api.js (no circular import).
+// Entry point for mock requests, called from api.js
 export async function mockApi(method, path, body, token) {
   await new Promise((r) => setTimeout(r, LATENCY_MS));
   trace(`mock: handling ${method} ${path}`);

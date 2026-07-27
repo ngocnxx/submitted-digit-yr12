@@ -6,9 +6,7 @@
   <title>NCEA Review Navigator</title>
   <link rel="stylesheet" href="style.css">
 
-  <!-- Serve-guard: a CLASSIC (non-module) script so it runs even when the ES
-       module app can't load (e.g. opened via file://). If the app hasn't booted
-       shortly after loadand reveal the #serve-hint help card instead of a blank page. -->
+  <!-- Shows a help message if the page is opened as a file instead of a server. -->
   <script>
     window.addEventListener('DOMContentLoaded', function () {
       setTimeout(function () {
@@ -34,7 +32,7 @@
     </div>
   </div>
 
-  <!-- Topbar: hidden until logged in — route() shows/hides it. -->
+  <!-- Topbar, only shown after login. -->
   <div id="topbar" class="hidden">
     <span class="brand" data-action="nav-dashboard" role="button" tabindex="0">NCEA Review Navigator</span>
     <button data-action="nav-dashboard"><span data-icon="layout-dashboard" data-icon-size="16"></span> Dashboard</button>
@@ -42,10 +40,7 @@
     <button data-action="do-logout"><span data-icon="log-out" data-icon-size="16"></span> Log out</button>
   </div>
 
-  <!-- ===================================================================
-       SCREEN: Auth — login + create-account (the logged-out default).
-  
-       =================================================================== -->
+  <!-- Screen: Auth, login and sign up. -->
   <section id="screen-auth" class="screen hidden">
     <div class="auth-bg">             <!-- full-height gradient backdrop, centers the card -->
       <div class="auth-card">
@@ -76,7 +71,7 @@
           <button class="btn btn-primary btn-block btn-lg" data-action="do-login">Sign in</button>
         </div>
 
-        <!-- Signup form — hidden until the tab switches -->
+        <!-- Signup form, hidden until the tab changes -->
         <div id="auth-signup" class="auth-form hidden">
           <div class="field">
             <label for="signup-name">Full name</label>
@@ -182,12 +177,14 @@
     </div>
   </section>
 
-  <!-- Screen filled in by JS once the dashboard is built. -->
+  <!-- Dashboard, subject detail, and settings screens are filled in by JS. -->
   <section id="screen-dashboard" class="screen hidden"></section>
+  <section id="screen-subject"   class="screen hidden"></section>
+  <section id="screen-settings"  class="screen hidden"></section>
 
   <div id="modal-overlay" class="modal-overlay"></div>
   <div id="toast" class="toast"></div>
-
+  
   <script type="module" src="js/main.js"></script>
 </body>
 </html>

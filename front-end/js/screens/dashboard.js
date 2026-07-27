@@ -1,4 +1,4 @@
-// Dashboard (#screen-dashboard) — the homepage. .
+// Dashboard screen, the main page after login.
 import { api } from '../api.js';
 import { $, esc } from '../dom.js';
 import { state } from '../state.js';
@@ -35,8 +35,6 @@ export async function renderDashboard() {
         <button class="dash-tab${dashTab === 'subjects' ? ' active' : ''}" data-action="dash-tab" data-tab="subjects">Subject Details</button>
       </div>
 
-      ${dashTab === 'priorities' ? prioritiesTab(subjects, feed) : subjectsTab(subjects)}
-      
       <div class="intro-cards">
         <div class="intro-card intro-greeting">
           <span class="intro-icon">${icon('hand', { size: 26 })}</span>
@@ -51,7 +49,7 @@ export async function renderDashboard() {
         </div>
       </div>
 
-    
+      ${dashTab === 'priorities' ? prioritiesTab(subjects, feed) : subjectsTab(subjects)}
 
       <p class="wellbeing-footer">
         Schools and exams can be quite overwhelming for some people. Do you need someone to talk? Youthline : 0800 376 633 or text 234 can give you great support.
@@ -66,7 +64,7 @@ function prioritiesTab(subjects, feed) {
         <button class="btn btn-primary" data-action="add-subject">${icon('plus', { size: 15 })} Add subject</button>
       </div>`;
   }
-  // Left column: today's review feed (chosen + ranked by the SERVER). Right: the panel.
+  // Left: today's review feed. Right: subject panel.
   const { shown, moreCount, overdue, dueToday } = feed;
   trace('dashboard: prioritiesTab', { shown: shown.length, overdue, dueToday, moreCount });
   const feedHtml = shown.length
@@ -81,7 +79,7 @@ function prioritiesTab(subjects, feed) {
     </div>`;
 }
 
-// The "Your subjects" panel that sits BESIDE the priorities feed .
+// "Your subjects" side panel
 function subjectsPanel(subjects) {
   trace('dashboard: subjectsPanel', subjects.length, 'subjects');
   return `
@@ -96,7 +94,7 @@ function subjectPanelRow(subject) {
   const cov = coverageOf(subject.topics || []);
   return `
     <div class="sp-row">
-      <div class="sp-head">
+      <div class="sp-head" data-action="view-subject" data-subject-id="${subject.id}">
         <span class="sp-icon">${icon(subjectIcon(subject.name), { size: 18 })}</span>
         <span class="sp-name">${esc(subject.name)}</span>
         <span class="sp-pct">${cov}%</span>
@@ -138,7 +136,7 @@ function subjectSummaryCard(subject) {
   const cov = coverageOf(topics);
   const reviewed = topics.filter((t) => (t.reviewCount || 0) >= 1).length;
   return `
-    <div class="subject-summary">
+    <div class="subject-summary" data-action="view-subject" data-subject-id="${subject.id}">
       <span class="ss-icon">${icon(subjectIcon(subject.name), { size: 26 })}</span>
       <div class="ss-body">
         <div class="ss-name">${esc(subject.name)}</div>
@@ -146,5 +144,6 @@ function subjectSummaryCard(subject) {
         <div class="progress"><span class="progress-fill" style="width:${cov}%"></span></div>
       </div>
       <div class="ss-pct">${cov}%</div>
+      <button class="btn btn-soft btn-sm" data-action="view-subject" data-subject-id="${subject.id}">View More</button>
     </div>`;
 }
