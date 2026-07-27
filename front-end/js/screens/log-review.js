@@ -1,27 +1,23 @@
-// Log Review modal — the accountability heart of the app.
-//
-// Opened from the priorities feed (dashboard) and the subject-detail screen.
-// Collects: confidence (recorded, never changes the schedule — per the spec),
-// Evidence of Learning, and Reflection. On submit it calls POST /api/log-review
-// then runs the caller's onDone() so the screen behind it refreshes.
+// Log review modal. Opened from the dashboard or subject detail screen.
+// Collects confidence, evidence of learning, and reflection notes.
 
 import { api } from '../api.js';
 import { $, closeModal, esc, openModalFromHTML, toast, withPending } from '../dom.js';
 import { icon } from '../icons.js';
 import { trace } from '../debug.js';
 
-// Confidence options — encouraging, non-judgemental language (per the tone rules).
+// Confidence choices with friendly labels
 const CONFIDENCE = [
   { key: 'shaky', label: 'Need more time' },
   { key: 'okay', label: 'Getting there' },
   { key: 'solid', label: 'Pretty well' },
 ];
 
-let pending = null; // { topicId, onDone } for the currently-open modal
+let pending = null; // stores the topic being reviewed right now
 
 export function openLogReview(topic, onDone) {
   trace('log-review: open modal', { topicId: topic.id, name: topic.name });
-  pending = { topicId: topic.id, onDone };
+  pending = { topicId: topic.id, topicName: topic.name, onDone };
   openModalFromHTML(`
     <div class="modal-card">
       <h2>Log a review</h2>
@@ -61,7 +57,7 @@ export function openLogReview(topic, onDone) {
     </div>
   `);
 
-  // Confidence pills: a small local listener (this markup only lives while open).
+  // Listen for confidence pill clicks
   const row = $('#lr-confidence');
   row.addEventListener('click', (e) => {
     const b = e.target.closest('[data-conf]');
@@ -72,7 +68,7 @@ export function openLogReview(topic, onDone) {
   });
 }
 
-// Front-end-only file attach: shows the chosen filename (no upload backend yet).
+// Show the name of the attached file
 export function attachFile() {
   const input = $('#lr-file');
   input.onchange = () => {
@@ -81,6 +77,24 @@ export function attachFile() {
     trace('log-review: file attached', f && f.name);
   };
   input.click();
+}
+
+// How long to show the "Log saved!" message before closing
+const SUCCESS_HOLD_MS = 1100;
+
+// Show "Log saved!" inside the modal
+function showSavedState(topicName) {
+  const card = $('#modal-overlay .modal-card');
+  if (!card) return;
+  card.innerHTML = `
+    <div class="lr-success" role="status" aria-live="polite">
+      <span class="lr-success-tick">${icon('circle-check-big', { size: 46 })}</span>
+      <h2>Log saved!</h2>
+      <p class="lr-success-sub">
+        ${topicName ? `${esc(topicName)} is recorded` : 'Your review is recorded'} and your next
+        review is now scheduled.
+      </p>
+    </div>`;
 }
 
 export async function submitLogReview(btn) {
@@ -103,11 +117,17 @@ export async function submitLogReview(btn) {
         reflection,
       }),
     );
+    // Server confirmed the review was saved
+    trace('log-review: saved OK → showing confirmation');
     const done = pending.onDone;
+    const topicName = pending.topicName;
     pending = null;
+
+    showSavedState(topicName); // 1. tick + "Log saved!" in the modal
+    await new Promise((r) => setTimeout(r, SUCCESS_HOLD_MS));
     closeModal();
-    toast('Review logged — nice work!');
-    if (done) await done(); // refresh the screen behind the modal
+    toast('Review logged- nice work!', 'success'); // 2. green toast as it closes
+    if (done) await done(); // 3. refresh the screen behind the modal
   } catch (e) {
     trace('log-review: submit FAILED', e.message);
     toast(e.message || 'Could not log review');
