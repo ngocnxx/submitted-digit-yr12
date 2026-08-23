@@ -2,6 +2,7 @@
 
 import { api } from '../api.js';
 import { $, $$, esc, toast, withPending } from '../dom.js';
+import { icon } from '../icons.js';
 import { resetOnboarding, state } from '../state.js';
 import { trace } from '../debug.js';
 import { navigate } from '../router.js';
@@ -53,7 +54,7 @@ function renderObChips() {
     .map(
       (name, i) =>
         `<span class="topic-chip">${esc(name)}
-           <span class="chip-remove" data-ob-remove="${i}">✕</span>
+           <span class="chip-remove" data-ob-remove="${i}">${icon('x', { size: 13 })}</span>
          </span>`,
     )
     .join('');

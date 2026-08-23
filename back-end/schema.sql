@@ -47,6 +47,8 @@ CREATE TABLE IF NOT EXISTS reviews (
     next_due      TEXT,                         -- ISO date
     evidence      TEXT,                         -- optional accountability note (never affects the schedule)
     reflection    TEXT,                         -- optional accountability note (never affects the schedule)
+    attachment      TEXT,                       -- optional photo saved as a data URL
+    attachment_name TEXT,                       -- the original file name, for the label
     created_at    TEXT    NOT NULL DEFAULT (datetime('now'))
 );
 

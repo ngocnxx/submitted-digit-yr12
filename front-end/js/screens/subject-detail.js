@@ -1,7 +1,7 @@
 // Subject detail screen. Shows topics, review history, and coverage.
 
 import { api } from '../api.js';
-import { $, esc, toast } from '../dom.js';
+import { $, esc, openModalFromHTML, toast } from '../dom.js';
 import { icon, subjectIcon } from '../icons.js';
 import { coverageOf, statusBadge, statusOf } from '../schedule.js';
 import { openLogReview } from './log-review.js';
@@ -10,9 +10,41 @@ import { trace } from '../debug.js';
 
 const CONF_LABEL = { shaky: 'Need more time', okay: 'Getting there', solid: 'Pretty well' };
 
+// Lucide icon and colour for each confidence level so past reviews stand out.
+// This is only how it looks. Confidence never changes the review schedule.
+const CONF_META = {
+  shaky: { icon: 'sprout', cls: 'conf-shaky' },
+  okay: { icon: 'trending-up', cls: 'conf-okay' },
+  solid: { icon: 'circle-check-big', cls: 'conf-solid' },
+  internal_assessment: { icon: 'book-open', cls: 'conf-internal' },
+};
+
+// Build the coloured tag shown next to a review
+function confTag(key) {
+  if (!key) return '';
+  const meta = CONF_META[key] || { icon: 'circle-check-big', cls: 'conf-okay' };
+  const label = CONF_LABEL[key] || key.replace(/_/g, ' ');
+  return `<span class="conf-tag ${meta.cls}">${icon(meta.icon, { size: 13 })}${esc(label)}</span>`;
+}
+
+// True if this review has anything worth opening
+function hasNote(review) {
+  return !!(review.evidence || review.reflection || review.attachment);
+}
+
+// Escape the text first, then turn any web address into a real link.
+// Order matters here, otherwise the escaping would break the link.
+function linkify(text) {
+  return esc(text).replace(
+    /(https?:\/\/[^\s<]+)/g,
+    (url) => `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`,
+  );
+}
+
+// The confidence from the most recent review of this topic
 function avgConfidence(topic) {
   const last = (topic.reviews || []).filter((r) => r.confidence).slice(-1)[0];
-  return last ? CONF_LABEL[last.confidence] || last.confidence : null;
+  return last ? last.confidence : null;
 }
 
 function topicRow(topic, isPriority = false) {
@@ -24,8 +56,10 @@ function topicRow(topic, isPriority = false) {
          <ul>${topic.reviews
            .map(
              (r, i) =>
-               `<li>R${i + 1} · ${esc(r.reviewedDate)}${r.confidence ? ` · ${esc(CONF_LABEL[r.confidence] || r.confidence)}` : ''} → due ${esc(r.nextDue)}${
-                 r.reflection ? `<span class="hist-note">“${esc(r.reflection)}”</span>` : ''
+               `<li>R${i + 1} · ${esc(r.reviewedDate)}${r.confidence ? ` · ${confTag(r.confidence)}` : ''} → due ${esc(r.nextDue)}${
+                 hasNote(r)
+                   ? ` <button class="hist-open" data-action="view-note" data-topic-id="${topic.id}" data-review-index="${i}">${icon('book-open', { size: 12 })} View note</button>`
+                   : ''
                }</li>`,
            )
            .join('')}</ul></details>`
@@ -34,7 +68,7 @@ function topicRow(topic, isPriority = false) {
     <div class="topic-row${isPriority ? ' topic-priority' : ''}">
       <div class="topic-main">
         <div class="topic-name">${esc(topic.name)}${topic.standardNumber ? ` <span class="std">${esc(topic.standardNumber)}</span>` : ''}</div>
-        <div class="topic-meta">${topic.reviewCount ? `Reviewed ${topic.reviewCount}× · ${pct}%` : 'Not yet reviewed'}${conf ? ` · <span class="conf-tag">${esc(conf)}</span>` : ''}</div>
+        <div class="topic-meta">${topic.reviewCount ? `Reviewed ${topic.reviewCount}× · ${pct}%` : 'Not yet reviewed'}${conf ? ` · ${confTag(conf)}` : ''}</div>
         ${history}
       </div>
       <div class="topic-side">
@@ -81,17 +115,73 @@ export async function renderSubjectDetail(subjectId) {
       <p class="sd-coverage">Coverage: ${cov}% (${reviewed} of ${topics.length} topics reviewed)</p>
       <div class="progress"><span class="progress-fill" style="width:${cov}%"></span></div>
 
-      ${internal ? '<div class="internal-banner">Internal mode is on — this subject is paused while you focus on the assessment.</div>' : ''}
+      ${internal ? `<div class="internal-banner">Internal mode is on. ${esc(subject.name)} is paused while you focus on your assessment.</div>` : ''}
 
       ${priority ? `<h3 class="sd-section">Today's priority</h3>${topicRow(priority, true)}` : ''}
 
       <h3 class="sd-section">All topics</h3>
-      ${topics.length ? topics.map((t) => topicRow(t)).join('') : '<p class="muted small">No topics yet — add some to get started.</p>'}
+      ${topics.length ? topics.map((t) => topicRow(t)).join('') : '<p class="muted small">No topics yet. Add some to get started.</p>'}
 
-      <button class="btn btn-internal" data-action="toggle-internal" data-subject-id="${subject.id}">
-        ${internal ? 'Stop' : 'Start'} Internal mode for ${esc(subject.name)}
-      </button>
+      <div class="internal-box">
+        <h3 class="internal-box-title">${icon('book-open', { size: 18 })} Internal assessment mode</h3>
+        <p class="internal-box-text">
+          ${
+            internal
+              ? `${esc(subject.name)} is paused right now, so it will not show up in your daily reviews. When you stop it, every topic is marked as revised and set to come back in 7 days.`
+              : `Doing an internal for ${esc(subject.name)}? Turning this on pauses it in your daily reviews so you can focus. Nothing is deleted and your topics stay exactly as they are.`
+          }
+        </p>
+        <button class="btn btn-internal" data-action="toggle-internal" data-subject-id="${subject.id}">
+          ${internal ? 'Stop' : 'Start'} Internal mode for ${esc(subject.name)}
+        </button>
+      </div>
     </div>`;
+}
+
+// Open one saved review so the student can read it back.
+// Wired from main.js by the "view-note" action.
+export async function openReviewNote(topicId, reviewIndex) {
+  try {
+    const { subjects } = await api('GET', '/api/subjects');
+    const topic = subjects.flatMap((s) => s.topics).find((t) => String(t.id) === String(topicId));
+    const review = topic && (topic.reviews || [])[Number(reviewIndex)];
+    if (!review) return toast('That note could not be found.');
+    trace('subject-detail: open note', { topicId, reviewIndex });
+
+    openModalFromHTML(`
+      <div class="modal-card note-card">
+        <h2>Review note</h2>
+        <p class="modal-sub">${esc(topic.name)} · ${esc(review.reviewedDate)}</p>
+        ${review.confidence ? `<p class="note-conf">${confTag(review.confidence)}</p>` : ''}
+
+        ${
+          review.evidence
+            ? `<div class="note-block"><h3>Evidence of Learning</h3><p>${linkify(review.evidence)}</p></div>`
+            : ''
+        }
+        ${
+          review.reflection
+            ? `<div class="note-block"><h3>Reflection</h3><p>${linkify(review.reflection)}</p></div>`
+            : ''
+        }
+        ${
+          review.attachment
+            ? `<div class="note-block"><h3>Attached photo</h3>
+                 <a href="${esc(review.attachment)}" target="_blank" rel="noopener noreferrer">
+                   <img class="note-img" src="${esc(review.attachment)}" alt="${esc(review.attachmentName || 'Attached photo')}">
+                 </a>
+                 <p class="muted small">${esc(review.attachmentName || '')}</p>
+               </div>`
+            : ''
+        }
+
+        <div class="modal-actions">
+          <button class="btn btn-ghost" data-action="modal-cancel">Close</button>
+        </div>
+      </div>`);
+  } catch (e) {
+    toast(e.message || 'Could not open that note');
+  }
 }
 
 // Toggle internal (assessment) mode on or off for this subject
@@ -104,7 +194,7 @@ export async function onToggleInternal(id) {
       subjectId: Number(id),
     });
     trace('subject-detail: internal mode', on ? 'ended' : 'started', id);
-    toast(on ? 'Internal mode ended — topics caught up' : 'Internal mode on — subject paused');
+    toast(on ? 'Internal mode ended, topics caught up' : 'Internal mode on, subject paused');
     route();
   } catch (e) {
     toast(e.message || 'Could not update internal mode');

@@ -6,7 +6,8 @@ import { $, closeModal, esc, openModalFromHTML, toast, withPending } from '../do
 import { icon } from '../icons.js';
 import { trace } from '../debug.js';
 
-// Confidence choices with friendly labels
+// Confidence choices with friendly labels.
+// Saved as a record for the student only. It never changes the next due date.
 const CONFIDENCE = [
   { key: 'shaky', label: 'Need more time' },
   { key: 'okay', label: 'Getting there' },
@@ -18,8 +19,9 @@ let pending = null; // stores the topic being reviewed right now
 export function openLogReview(topic, onDone) {
   trace('log-review: open modal', { topicId: topic.id, name: topic.name });
   pending = { topicId: topic.id, topicName: topic.name, onDone };
+  attachment = null; // start clean so a photo never carries over to another topic
   openModalFromHTML(`
-    <div class="modal-card">
+    <div class="modal-card lr-card">
       <h2>Log a review</h2>
       <p class="modal-sub">${icon('circle-check-big', { size: 16 })} ${esc(topic.name)}</p>
 
@@ -35,7 +37,7 @@ export function openLogReview(topic, onDone) {
 
       <div class="field">
         <label for="lr-evidence">Evidence of Learning</label>
-        <textarea class="input" id="lr-evidence" rows="3" placeholder="You can paste a key formula, list main points you revised, or describe what you did (notes, questions answered, etc.) or attach a Google Docs link"></textarea>
+        <textarea class="input" id="lr-evidence" rows="3" placeholder="e.g. a key formula, the main points you revised, or a link to your notes"></textarea>
         <div class="lr-attach">
           <button type="button" class="btn btn-ghost btn-sm" data-action="lr-attach">${icon('plus', { size: 14 })} Attach file / photo</button>
           <span id="lr-attach-name" class="muted small"></span>
@@ -45,10 +47,10 @@ export function openLogReview(topic, onDone) {
 
       <div class="field">
         <label for="lr-reflection">Reflection</label>
-        <textarea class="input" id="lr-reflection" rows="3" placeholder="You can write: One thing you understood better / One question you still have / What areas do you need to improve?"></textarea>
+        <textarea class="input" id="lr-reflection" rows="3" placeholder="One thing you understood better, or one question you still have"></textarea>
       </div>
 
-      <p class="modal-note">These are just optional but they helps build real understanding and long-term retention to support your learning</p>
+      <p class="modal-note">Both boxes are optional, but writing a little helps it stick.</p>
 
       <div class="modal-actions">
         <button class="btn btn-ghost" data-action="modal-cancel">Cancel</button>
@@ -68,13 +70,44 @@ export function openLogReview(topic, onDone) {
   });
 }
 
-// Show the name of the attached file
+// Biggest photo we accept, before it is turned into text
+const MAX_ATTACHMENT_MB = 2;
+
+// The chosen photo, held as a data URL until the review is submitted
+let attachment = null;
+
+// Read the chosen photo into a data URL so it can be saved with the review
 export function attachFile() {
   const input = $('#lr-file');
   input.onchange = () => {
     const f = input.files && input.files[0];
-    $('#lr-attach-name').textContent = f ? `Attached: ${f.name}` : '';
-    trace('log-review: file attached', f && f.name);
+    const label = $('#lr-attach-name');
+    if (!f) {
+      attachment = null;
+      label.textContent = '';
+      return;
+    }
+    if (!f.type.startsWith('image/')) {
+      label.textContent = 'Please choose an image.';
+      input.value = '';
+      return;
+    }
+    if (f.size > MAX_ATTACHMENT_MB * 1024 * 1024) {
+      label.textContent = `That image is too big (max ${MAX_ATTACHMENT_MB} MB).`;
+      input.value = '';
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      attachment = { dataUrl: reader.result, name: f.name };
+      label.textContent = `Attached: ${f.name}`;
+      trace('log-review: photo ready', f.name, f.size + ' bytes');
+    };
+    reader.onerror = () => {
+      attachment = null;
+      label.textContent = 'Could not read that file.';
+    };
+    reader.readAsDataURL(f);
   };
   input.click();
 }
@@ -115,6 +148,8 @@ export async function submitLogReview(btn) {
         confidence,
         evidence,
         reflection,
+        attachment: attachment ? attachment.dataUrl : null,
+        attachmentName: attachment ? attachment.name : null,
       }),
     );
     // Server confirmed the review was saved
@@ -122,6 +157,7 @@ export async function submitLogReview(btn) {
     const done = pending.onDone;
     const topicName = pending.topicName;
     pending = null;
+    attachment = null;
 
     showSavedState(topicName); // 1. tick + "Log saved!" in the modal
     await new Promise((r) => setTimeout(r, SUCCESS_HOLD_MS));

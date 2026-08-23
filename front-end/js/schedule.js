@@ -5,6 +5,7 @@ import { trace } from './debug.js';
 export const INTERVALS = { 1: 1, 2: 3, 3: 7 };
 export const INTERVAL_MAX = 14;
 
+// Only the review count decides the gap. Confidence never changes it.
 export function intervalFor(reviewCount) {
   return INTERVALS[reviewCount] || INTERVAL_MAX;
 }
@@ -97,10 +98,18 @@ export function buildPriorities(subjects = [], cap = 5) {
 
   const display = [...active, ...firstPerSubject];
   const shown = display.slice(0, cap);
+
+  // Everything the student could review today, in the same ranked order.
+  // "rest" is what is left after the daily cap, so the dashboard can offer it.
+  const firstIds = new Set(firstPerSubject.map((i) => i.id));
+  const everything = [...display, ...news.filter((i) => !firstIds.has(i.id))];
+  const rest = everything.slice(shown.length);
+
   const totalReviewable = active.length + news.length;
-  trace('schedule: buildPriorities', { shown: shown.length, overdue, dueToday });
+  trace('schedule: buildPriorities', { shown: shown.length, rest: rest.length, overdue, dueToday });
   return {
     shown,
+    rest,
     moreCount: totalReviewable - shown.length,
     overdue,
     dueToday,

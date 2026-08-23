@@ -15,9 +15,9 @@ import {
 } from './screens/onboarding.js';
 import { trace } from './debug.js'; // debug tracer (on with ?debug=1)
 import { hydrateIcons } from './icons.js';
-import { setDashTab } from './screens/dashboard.js';
+import { setDashTab, toggleMoreTopics } from './screens/dashboard.js';
 import { attachFile, openLogReview, submitLogReview } from './screens/log-review.js';
-import { onToggleInternal } from './screens/subject-detail.js';
+import { onToggleInternal, openReviewNote } from './screens/subject-detail.js';
 import { openAddSubject, openAddTopic, submitAddSubject, submitAddTopic } from './screens/add.js';
 // Signal that the ES-module graph loaded and ran.
 window.__NRN_BOOTED = true;
@@ -75,6 +75,9 @@ document.body.addEventListener('click', async (e) => {
       case 'dash-tab':
         setDashTab(act.dataset.tab);
         break;
+      case 'show-more-topics':
+        toggleMoreTopics();
+        break;
       case 'view-subject':
         navigate('#subject-' + act.dataset.subjectId);
         break;
@@ -94,6 +97,9 @@ document.body.addEventListener('click', async (e) => {
         break;
       case 'toggle-internal':
         onToggleInternal(act.dataset.subjectId);
+        break;
+      case 'view-note':
+        await openReviewNote(act.dataset.topicId, act.dataset.reviewIndex);
         break;
 
       // Add subject / add topic (modals, refresh the screen on success)

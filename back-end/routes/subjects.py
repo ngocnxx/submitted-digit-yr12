@@ -43,6 +43,8 @@ def review_public(row: sqlite3.Row) -> dict:
         "confidence": row["confidence"],
         "evidence": row["evidence"],
         "reflection": row["reflection"],
+        "attachment": row["attachment"],
+        "attachmentName": row["attachment_name"],
         "nextDue": row["next_due"],
     }
 

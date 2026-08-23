@@ -8,6 +8,8 @@ import { addDaysISO, buildPriorities, coverageOf, intervalFor, todayISO } from '
 const DB_KEY = 'nrn_mock_db';
 const MIN_PASSWORD_LEN = 4;
 const MAX_NAME_LEN = 80;
+// Photos are stored as a data URL. 2 MB of file is about 2.8 MB encoded.
+const MAX_ATTACHMENT_CHARS = 2_800_000;
 const LATENCY_MS = 120; // a little delay so pending/disabled UI states are visible
 
 function load() {
@@ -42,7 +44,12 @@ function blank() {
 }
 
 function save(db) {
-  localStorage.setItem(DB_KEY, JSON.stringify(db));
+  try {
+    localStorage.setItem(DB_KEY, JSON.stringify(db));
+  } catch {
+    // localStorage is only about 5 MB, so a big photo can fill it up
+    fail('Your browser storage is full. Try a smaller photo.', 507);
+  }
 }
 
 function nextId(db) {
@@ -55,6 +62,14 @@ function fail(message, status = 400) {
   const err = new Error(message);
   err.status = status;
   throw err;
+}
+
+// Keep only an image data URL, and only if it is small enough
+function cleanAttachment(value) {
+  if (typeof value !== 'string' || !value) return null;
+  if (!value.startsWith('data:image/')) fail('Only image files can be attached.');
+  if (value.length > MAX_ATTACHMENT_CHARS) fail('That image is too big. Please attach one under 2 MB.');
+  return value;
 }
 
 function requireStr(value, field, maxLen = MAX_NAME_LEN) {
@@ -179,6 +194,8 @@ const routes = {
                 confidence: r.confidence,
                 evidence: r.evidence,
                 reflection: r.reflection,
+                attachment: r.attachment ?? null,
+                attachmentName: r.attachmentName ?? null,
                 nextDue: r.nextDue,
               })),
           })),
@@ -291,6 +308,8 @@ const routes = {
       confidence: (body.confidence || '').trim() || null,
       evidence: (body.evidence || '').trim() || null, // accountability field
       reflection: (body.reflection || '').trim() || null, // accountability field
+      attachment: cleanAttachment(body.attachment),
+      attachmentName: (body.attachmentName || '').trim().slice(0, 120) || null,
       interval,
       nextDue,
     };

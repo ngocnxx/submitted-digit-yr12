@@ -253,6 +253,8 @@ p  {
   font-size: 12px;
   line-height: 1;
   transition: color .15s;
+  display: inline-flex;
+  align-items: center;
 }
 .chip-remove:hover { color: var(--red-500); }
 
@@ -326,9 +328,10 @@ p  {
   inset: 0;
   background: rgba(15, 23, 42, .45);
   z-index: 1000;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
   padding: 20px;
+  overflow-y: auto;
 }
 .modal-overlay.show { display: flex; }
 
@@ -361,6 +364,8 @@ p  {
   padding: 26px;
   max-width: 460px;
   width: 100%;
+  /* auto margin centres it, but lets it scroll when the modal is tall */
+  margin: auto;
 }
 .modal-card h2 { 
   margin-bottom: 4px; 
@@ -409,10 +414,46 @@ textarea.input {
   font-size: 13px;
   font-weight: 600;
 }
-.conf-pill.active { 
-  background: var(--blue-500); 
-  color: #fff; 
+.conf-pill.active {
+  background: var(--blue-500);
+  color: #fff;
   border-color: var(--blue-500); }
+
+/* Log review modal: clear text sizes so the title reads as the biggest thing */
+.lr-card h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+.lr-card .field label {
+  font-size: 1.1rem;
+  color: var(--slate-800);
+  margin-bottom: 8px;
+}
+.lr-card .conf-pill { font-size: 0.9rem; }
+.lr-card .modal-note { font-size: 0.9rem; }
+
+/* Topic name as a badge so it sits apart from the title */
+.lr-card .modal-sub {
+  display: inline-flex;
+  width: auto;
+  background: var(--lilac-50);
+  color: var(--lilac-500);
+  font-size: 0.9rem;
+  font-weight: 700;
+  padding: 5px 12px;
+  border-radius: var(--radius-full);
+  margin-bottom: 1.25rem;
+}
+
+/* Light card behind each step so the modal is not one block of text */
+.lr-card .field {
+  background: var(--slate-50);
+  border: 1px solid var(--slate-100);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  margin-bottom: 1.25rem;
+}
 
 .progress {
   height: 8px;
@@ -622,6 +663,32 @@ textarea.input {
 }
 .empty-state .btn {
    margin-top: 14px; }
+/* A new user lands here first, so make the next step obvious */
+.empty-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 68px;
+  height: 68px;
+  margin-bottom: 14px;
+  border-radius: var(--radius-full);
+  background: var(--blue-50);
+  color: var(--blue-600);
+}
+.empty-title { margin-bottom: 6px; }
+.empty-state .dashboard-sub {
+  max-width: 380px;
+  margin: 0 auto;
+}
+/* Site-wide, quiet on purpose so it never competes with real content */
+.app-footer {
+  padding: 14px 20px 18px;
+  text-align: center;
+  font-size: 11px;
+  color: var(--slate-400);
+}
+.app-footer a { color: var(--slate-500); }
+
 .wellbeing-footer {
   margin-top: 32px;
   padding-top: 16px;
@@ -701,16 +768,27 @@ textarea.input {
   color: var(--slate-500); 
   margin-bottom: 14px; }
 
+/* Button that opens the topics sitting under the daily cap */
 .more-when-ready {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   text-align: center;
   color: var(--blue-700);
   background: var(--blue-50);
+  border: 1.5px solid var(--blue-100);
   border-radius: var(--radius-full);
   padding: 8px 16px;
   font-size: 13px;
+  font-weight: 600;
   margin-top: 6px;
+  transition: background .15s, border-color .15s;
 }
+.more-when-ready:hover {
+  background: var(--blue-100);
+  border-color: var(--blue-200);
+}
+.more-list { margin-top: 12px; }
 
 /* Two-column Priorities layout: feed (left) + "Your subjects" panel (right) */
 .dash-cols { display: flex; gap: 20px; align-items: flex-start; }
@@ -792,8 +870,9 @@ textarea.input {
   box-shadow: var(--shadow-sm);
   padding: 16px 18px;
   margin-bottom: 12px;
+  max-width: 100%;
 }
-.pc-left { flex: 1; 
+.pc-left { flex: 1;
   min-width: 0; }
 .subject-tag {
   display: inline-block;
@@ -808,11 +887,24 @@ textarea.input {
 .pc-topic {
    font-weight: 700;
     margin-bottom: 2px;
+    overflow-wrap: break-word;
    }
 .pc-meta {
    font-size: 13px;
-    color: var(--slate-500); 
+    color: var(--slate-500);
     margin-bottom: 8px; }
+
+/* On a phone stack the card so it never scrolls sideways */
+@media (max-width: 540px) {
+  .priority-card {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .priority-card .btn {
+    width: 100%;
+    white-space: normal;
+  }
+}
 
 /* Subject-summary cards (Subject Details tab) */
 .subject-summary {
@@ -940,9 +1032,39 @@ textarea.input {
    color: var(--slate-500); 
    margin-top: 2px; }
 
-.conf-tag { 
-  color: var(--slate-600);
-   font-weight: 600; }
+/* Confidence tags: Lucide icon and soft colour so past reviews stand out.
+   Colour only shows how the review felt. It never changes the schedule. */
+.conf-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: 1.5px solid;
+  border-radius: var(--radius-full);
+  padding: 1px 9px;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.conf-shaky {
+  background: var(--amber-50);
+  color: var(--amber-600);
+  border-color: var(--amber-500);
+}
+.conf-okay {
+  background: var(--blue-50);
+  color: var(--blue-700);
+  border-color: var(--blue-400);
+}
+.conf-solid {
+  background: var(--green-50);
+  color: var(--green-600);
+  border-color: var(--green-500);
+}
+.conf-internal {
+  background: var(--lilac-50);
+  color: var(--lilac-500);
+  border-color: var(--lilac-500);
+}
 .topic-side {
    display: flex; 
    flex-direction: column; 
@@ -963,10 +1085,66 @@ textarea.input {
   margin: 6px 0 0; 
   padding-left: 16px; 
   color: var(--slate-600); }
-.hist-note { 
-  display: block; 
-  color: var(--slate-500); 
+.hist-note {
+  display: block;
+  color: var(--slate-500);
   font-style: italic; }
+
+/* Small button on a history row that opens the saved note */
+.hist-open {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 6px;
+  padding: 1px 8px;
+  border: 1px solid var(--blue-200);
+  border-radius: var(--radius-full);
+  background: var(--white);
+  color: var(--blue-700);
+  font-size: 11px;
+  font-weight: 600;
+  transition: background .15s;
+}
+.hist-open:hover { background: var(--blue-50); }
+
+/* Smaller tag inside history so it does not compete with the topic's own tag */
+.topic-history .conf-tag {
+  font-size: 10.5px;
+  padding: 0 6px;
+  border-width: 1px;
+  gap: 3px;
+}
+
+/* Saved review note, opened from a history row */
+.note-block {
+  background: var(--slate-50);
+  border: 1px solid var(--slate-100);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  margin-bottom: 12px;
+}
+.note-block h3 {
+  font-size: 14px;
+  color: var(--slate-600);
+  margin-bottom: 6px;
+}
+.note-block p {
+  margin: 0;
+  font-size: 14px;
+  overflow-wrap: break-word; /* long pasted links must not overflow */
+}
+.note-conf { margin-bottom: 12px; }
+/* Keep a big phone photo inside the modal instead of stretching it */
+.note-img {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  max-height: 320px;
+  object-fit: contain;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--slate-200);
+  background: var(--slate-100);
+}
 .internal-banner {
   background: var(--amber-50);
   color: var(--amber-600);
@@ -986,6 +1164,33 @@ textarea.input {
   border-radius: var(--radius-md);
   padding: 12px;
   font-weight: 700;
+}
+
+/* Box that explains what internal mode does before you press the button */
+.internal-box {
+  margin-top: 24px;
+  background: var(--amber-50);
+  border: 1.5px solid var(--amber-500);
+  border-radius: var(--radius-lg);
+  padding: 16px 18px;
+}
+.internal-box-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 6px;
+  font-size: 16px;
+  color: var(--slate-800);
+}
+.internal-box-text {
+  margin: 0 0 14px;
+  font-size: 14px;
+  color: var(--slate-600);
+}
+.internal-box .btn-internal {
+  margin-top: 0;
+  background: var(--white);
+  white-space: normal;
 }
 .std { 
   color: var(--slate-400);

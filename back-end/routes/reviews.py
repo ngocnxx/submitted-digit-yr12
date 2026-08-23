@@ -13,6 +13,9 @@ from routes.subjects import load_subjects, topic_public
 
 bp = Blueprint("reviews", __name__, url_prefix="/api")
 
+# Photos are stored as a data URL string. 2 MB of file is about 2.8 MB encoded.
+MAX_ATTACHMENT_CHARS = 2_800_000
+
 
 def _review_public(row) -> dict:
     return {
@@ -22,9 +25,22 @@ def _review_public(row) -> dict:
         "confidence": row["confidence"],
         "evidence": row["evidence"],
         "reflection": row["reflection"],
+        "attachment": row["attachment"],
+        "attachmentName": row["attachment_name"],
         "interval": row["interval"],
         "nextDue": row["next_due"],
     }
+
+
+def _clean_attachment(value):
+    """Keep only an image data URL, and only if it is small enough."""
+    if not isinstance(value, str) or not value:
+        return None
+    if not value.startswith("data:image/"):
+        raise ApiError("Only image files can be attached.")
+    if len(value) > MAX_ATTACHMENT_CHARS:
+        raise ApiError("That image is too big. Please attach one under 2 MB.")
+    return value
 
 
 @bp.post("/log-review")
@@ -49,6 +65,8 @@ def log_review():
     confidence = (data.get("confidence") or "").strip() or None
     evidence = (data.get("evidence") or "").strip() or None
     reflection = (data.get("reflection") or "").strip() or None
+    attachment = _clean_attachment(data.get("attachment"))
+    attachment_name = (data.get("attachmentName") or "").strip()[:120] or None
 
     db.execute(
         "UPDATE topics SET review_count = ?, next_due = ? WHERE id = ?",
@@ -56,8 +74,9 @@ def log_review():
     )
     cur = db.execute(
         """INSERT INTO reviews
-             (topic_id, reviewed_date, confidence, interval, next_due, evidence, reflection)
-           VALUES (?, ?, ?, ?, ?, ?, ?)""",
+             (topic_id, reviewed_date, confidence, interval, next_due, evidence, reflection,
+              attachment, attachment_name)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
         (
             topic_id,
             changes["reviewed_date"],
@@ -66,6 +85,8 @@ def log_review():
             changes["next_due"],
             evidence,
             reflection,
+            attachment,
+            attachment_name,
         ),
     )
     db.commit()

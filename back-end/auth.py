@@ -3,7 +3,7 @@
 Two security  this module have:
   1. Passwords are only ever stored/compared as werkzeug hashes — plaintext is
      never persisted, logged, or returned.
-  2. Sessions are stateless: a signed JWT carried as `Authorisation: Bearer <token>`
+  2. Sessions are stateless: a signed JWT carried as `Authorization: Bearer <token>`
      is the only proof of identity. There is no server-side session store.
 """
 
@@ -52,7 +52,7 @@ def decode_token(token: str) -> int:
 
 
 def _bearer_token() -> str | None:
-    """Pull the raw token out of an `Authorisation: Bearer <token>` header."""
+    """Pull the raw token out of an `Authorization: Bearer <token>` header."""
     header = request.headers.get("Authorization", "")
     if header.startswith("Bearer "):
         return header[len("Bearer ") :].strip()

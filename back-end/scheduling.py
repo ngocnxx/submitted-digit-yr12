@@ -25,7 +25,11 @@ def next_due_date(reviewed: date, new_review_count: int) -> date:
 
 
 def log_review(topic: dict, today: date) -> dict:
-    """Move a topic one step forward, return what changed."""
+    """Move a topic one step forward, return what changed.
+
+    Takes no confidence argument on purpose. How well the student felt the
+    review went is recorded, but it never changes the next due date.
+    """
     new_count = int(topic.get("reviewCount") or 0) + 1
     interval = interval_for(new_count)
     return {
@@ -114,9 +118,17 @@ def build_priorities(subjects: list, today: date, daily_cap: int = 5) -> dict:
 
     display = active + first_per_subject
     shown = display[:daily_cap]
+
+    # Everything the student could review today, in the same ranked order.
+    # "rest" is what is left after the daily cap, so the dashboard can offer it.
+    first_ids = {i.get("id") for i in first_per_subject}
+    everything = display + [i for i in news if i.get("id") not in first_ids]
+    rest = everything[len(shown) :]
+
     total_reviewable = len(active) + len(news)  # everything overdue/due/new
     return {
         "shown": shown,
+        "rest": rest,
         "moreCount": total_reviewable - len(shown),
         "overdue": overdue,
         "dueToday": due_today,

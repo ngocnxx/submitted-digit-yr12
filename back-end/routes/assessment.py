@@ -14,11 +14,11 @@ bp = Blueprint("assessment", __name__, url_prefix="/api")
 
 
 def _owned_subject(db, subject_id, user_id):
-    owns = db.execute(
-        "SELECT 1 FROM subjects WHERE id = ? AND user_id = ? AND archived = 0",
-        (subject_id, user_id),
+   owns = db.execute(
+       "SELECT 1 FROM subjects WHERE id = ? AND user_id = ? AND archived = 0",
+       (subject_id, user_id),
     ).fetchone()
-    if not owns:
+   if not owns:
         raise ApiError("That subject could not be found.", status=404)
 
 

@@ -7,10 +7,19 @@ import { coverageOf, statusBadge } from '../schedule.js';
 import { trace } from '../debug.js';
 
 let dashTab = 'priorities'; // remembered across re-renders
+let showAllTopics = false; // true once the student opens the extra topics
 
 export function setDashTab(tab) {
   dashTab = tab;
+  showAllTopics = false; // collapse again when switching tabs
   trace('dashboard: tab →', tab);
+  renderDashboard();
+}
+
+// Open or close the extra topics under the daily cap
+export function toggleMoreTopics() {
+  showAllTopics = !showAllTopics;
+  trace('dashboard: show all topics →', showAllTopics);
   renderDashboard();
 }
 
@@ -58,19 +67,32 @@ export async function renderDashboard() {
 }
 
 function prioritiesTab(subjects, feed) {
+  // Empty state so a brand new user knows what to do first
   if (!subjects.length) {
     return `<div class="empty-state">
-        <p class="dashboard-sub">Let's add your first subject to get started.</p>
-        <button class="btn btn-primary" data-action="add-subject">${icon('plus', { size: 15 })} Add subject</button>
+        <span class="empty-icon">${icon('book-open', { size: 34 })}</span>
+        <h2 class="empty-title">You have no subjects yet</h2>
+        <p class="dashboard-sub">Click the button below to add your first NCEA subject. Then add the topics you want to revise and we will schedule them for you.</p>
+        <button class="btn btn-primary btn-lg" data-action="add-subject">${icon('plus', { size: 15 })} Add your first subject</button>
       </div>`;
   }
   // Left: today's review feed. Right: subject panel.
   const { shown, moreCount, overdue, dueToday } = feed;
+  const rest = feed.rest || [];
   trace('dashboard: prioritiesTab', { shown: shown.length, overdue, dueToday, moreCount });
+  // The daily cap keeps the feed small, but the extra topics are still here to
+  // open if the student wants to keep going.
+  const moreHtml = moreCount
+    ? `<button class="more-when-ready" data-action="show-more-topics">
+         ${icon(showAllTopics ? 'x' : 'plus', { size: 14 })}
+         ${showAllTopics ? 'Hide the extra topics' : `${moreCount} more topics when you're ready`}
+       </button>
+       ${showAllTopics ? `<div class="more-list">${rest.map(priorityCard).join('')}</div>` : ''}`
+    : '';
   const feedHtml = shown.length
     ? `<p class="feed-summary">You have ${overdue} topics overdue, where ${dueToday} due today</p>
        ${shown.map(priorityCard).join('')}
-       ${moreCount ? `<p class="more-when-ready">+${moreCount} more topics when you're ready</p>` : ''}`
+       ${moreHtml}`
     : `<p class="dashboard-sub">You're all caught up. Nice work!</p>`;
   return `
     <div class="dash-cols">

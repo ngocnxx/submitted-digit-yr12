@@ -39,7 +39,12 @@ def close_db(_exception: BaseException | None = None) -> None:
 _NEW_COLUMNS = {
     "users": [("daily_cap", "INTEGER NOT NULL DEFAULT 5")],
     "subjects": [("internal_mode", "INTEGER NOT NULL DEFAULT 0")],
-    "reviews": [("evidence", "TEXT"), ("reflection", "TEXT")],
+    "reviews": [
+        ("evidence", "TEXT"),
+        ("reflection", "TEXT"),
+        ("attachment", "TEXT"),
+        ("attachment_name", "TEXT"),
+    ],
 }
 
 

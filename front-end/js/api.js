@@ -21,7 +21,7 @@ export async function api(method, path, body) {
       trace(`api: ${method} ${path} ← OK (mock)`);
       return data;
     } catch (e) {
-      trace(`api: ${method} ${path} ✗ ${e.status} (mock)`, e.message);
+      trace(`api: ${method} ${path} FAILED ${e.status} (mock)`, e.message);
       throw e;
     }
   }
@@ -48,7 +48,7 @@ export async function api(method, path, body) {
       e.name === 'AbortError'
         ? 'The server took too long to respond. Please try again.'
         : "Couldn't reach the server. Check your connection and try again.";
-    trace(`api: ${method} ${path} ✗ network/timeout`, e.name);
+    trace(`api: ${method} ${path} FAILED network/timeout`, e.name);
     const err = new Error(msg);
     err.status = 0; // network/timeout, not an HTTP status
     throw err;
@@ -64,7 +64,7 @@ export async function api(method, path, body) {
   }
 
   if (!res.ok) {
-    trace(`api: ${method} ${path} ✗ ${res.status}`, data && data.error);
+    trace(`api: ${method} ${path} FAILED ${res.status}`, data && data.error);
     const err = new Error((data && data.error) || `Request failed (${res.status})`);
     err.status = res.status;
     throw err;
