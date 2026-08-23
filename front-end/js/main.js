@@ -2,6 +2,7 @@
 // Main entry point. Sets up the global click handler and keyboard shortcuts.
 //import all these things from these files so i can use them
 import { api, clearToken } from './api.js';
+import { API_BASE } from './config.js';
 import { $, closeModal, toast } from './dom.js';
 import { state } from './state.js';
 import { navigate, route } from './router.js';
@@ -158,7 +159,20 @@ document.addEventListener('keydown', (e) => {
     obAddTopic();
   }
 });
-//Startup 
+// Check the Flask server is awake, and say so plainly if it is not.
+async function checkServer() {
+  try {
+    const res = await fetch(API_BASE + '/api/health');
+    if (!res.ok) throw new Error('bad status');
+    trace('main: back-end is up');
+  } catch {
+    trace('main: back-end is NOT reachable');
+    $('#server-hint')?.classList.remove('hidden');
+  }
+}
+
+//Startup
 window.addEventListener('hashchange', route);
 route(); // modules are deferred, so the DOM is already parsed here.
 hydrateIcons(); // replace every static [data-icon] element with its Lucide SVG
+checkServer();

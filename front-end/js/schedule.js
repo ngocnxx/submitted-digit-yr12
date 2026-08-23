@@ -1,14 +1,6 @@
-// Scheduling helpers used on the front end for display.
-
-import { trace } from './debug.js';
-
-export const INTERVALS = { 1: 1, 2: 3, 3: 7 };
-export const INTERVAL_MAX = 14;
-
-// Only the review count decides the gap. Confidence never changes it.
-export function intervalFor(reviewCount) {
-  return INTERVALS[reviewCount] || INTERVAL_MAX;
-}
+// Display helpers for showing when a topic is due.
+// The real scheduling maths lives on the server in back-end/scheduling.py.
+// This file only works out what label to show, it never decides a due date.
 
 // Format a date as YYYY-MM-DD
 function fmtLocal(d) {
@@ -18,18 +10,12 @@ function fmtLocal(d) {
   return `${y}-${m}-${day}`;
 }
 
-export function todayISO() {
+function todayISO() {
   return fmtLocal(new Date());
 }
 
-export function addDaysISO(iso, days) {
-  const d = new Date(iso + 'T00:00:00'); // parse as local midnight
-  d.setDate(d.getDate() + days);
-  return fmtLocal(d);
-}
-
 // Whole days from a -> b (b - a). Positive = b is later.
-export function daysBetween(aISO, bISO) {
+function daysBetween(aISO, bISO) {
   return Math.round((new Date(bISO + 'T00:00:00') - new Date(aISO + 'T00:00:00')) / 86400000);
 }
 
@@ -56,62 +42,4 @@ export function coverageOf(topics = []) {
   if (!topics.length) return 0;
   const reviewed = topics.filter((t) => (t.reviewCount || 0) >= 1).length;
   return Math.round((reviewed / topics.length) * 100);
-}
-
-// Build the review list for today, capped by the daily limit.
-export function buildPriorities(subjects = [], cap = 5) {
-  
-  const today = todayISO();
-  const active = [];
-  const news = [];
-  subjects.forEach((s) => {
-    if (s.internalMode) return; // paused while the student focuses on an internal
-    (s.topics || []).forEach((t) => {
-      const st = statusOf(t, today);
-      const item = {
-        ...t,
-        subjectName: s.name,
-        subjectId: s.id ?? t.subjectId,
-        status: st.status,
-        days: st.days,
-        statusLabel: statusBadge(t).label,
-      };
-      if (st.status === 'overdue' || st.status === 'due') active.push(item);
-      else if (st.status === 'new') news.push(item);
-    });
-  });
-  const overdue = active.filter((i) => i.status === 'overdue').length;
-  const dueToday = active.filter((i) => i.status === 'due').length;
-  active.sort((a, b) => b.days - a.days); // most overdue first
-
-  
-  news.sort((a, b) => a.subjectId - b.subjectId || (a.id || 0) - (b.id || 0));
-  const firstPerSubject = [];
-  const seen = new Set();
-  news.forEach((i) => {
-    if (!seen.has(i.subjectId)) {
-      seen.add(i.subjectId);
-      firstPerSubject.push(i);
-    }
-  });
-  firstPerSubject.sort((a, b) => (a.id || 0) - (b.id || 0));
-
-  const display = [...active, ...firstPerSubject];
-  const shown = display.slice(0, cap);
-
-  // Everything the student could review today, in the same ranked order.
-  // "rest" is what is left after the daily cap, so the dashboard can offer it.
-  const firstIds = new Set(firstPerSubject.map((i) => i.id));
-  const everything = [...display, ...news.filter((i) => !firstIds.has(i.id))];
-  const rest = everything.slice(shown.length);
-
-  const totalReviewable = active.length + news.length;
-  trace('schedule: buildPriorities', { shown: shown.length, rest: rest.length, overdue, dueToday });
-  return {
-    shown,
-    rest,
-    moreCount: totalReviewable - shown.length,
-    overdue,
-    dueToday,
-  };
 }

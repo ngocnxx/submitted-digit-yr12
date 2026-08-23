@@ -63,4 +63,5 @@ app = create_app()
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    # Port 5050 is what the front-end asks for (see front-end/js/config.js)
+    app.run(debug=True, port=5050)
