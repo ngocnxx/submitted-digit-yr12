@@ -17,8 +17,7 @@ python -c "import db; db.init_db()"
 sqlite3 navigator.db ".tables"
 
 ## 1.3. Flask
-python3 -m flask run --port=5050
-```
+python3 -m flask run --host=0.0.0.0 --port=5050```
 
 ## 2. Frondend
 
