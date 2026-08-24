@@ -1,17 +1,24 @@
 
 // Configuration & constants.
 
-//established
-export const API_BASE = window.NRN_API_BASE || 'http://127.0.0.1:5050'; //door number that the flask is running. || = or, can define  window.NRN_API_BASE for the actual web
+// Work out where the Flask back-end is.
+//
+// On a normal computer both servers run on 127.0.0.1, so the back-end is
+// simply 127.0.0.1:5050.
+//
+// In GitHub Codespaces the servers run in the cloud, not on the person's
+// laptop, and every port gets its own https address that looks like
+// https://<name>-5500.app.github.dev. So 127.0.0.1 would point at their own
+// laptop where nothing is running. Instead we take the address of this page
+// and swap the front-end port for the back-end port.
+function backendUrl() {
+  if (window.NRN_API_BASE) return window.NRN_API_BASE; // manual override
+  if (location.hostname.endsWith('.app.github.dev')) {
+    return location.origin.replace('-5500.', '-5050.');
+  }
+  return 'http://127.0.0.1:5050';
+}
 
-
-const _params = new URLSearchParams(window.location.search)//look at messy text start at ? mark; URLSearchParams= built in tool to turn messy string to easy to use checklist
-export const USE_MOCK = _params.has('mock')
-  ? /* is teh condition to the left true*/ true // Rule 1: Is '?mock' in the URL? If yes, USE_MOCK = true.No then move below // ? or : used for assign a single value immediately 
-  :  /* otherwise*/_params.has('real') // Rule 2: If not, is '?real' in the URL? If yes, USE_MOCK = false!
-    ? false
-    : typeof window.NRN_USE_MOCK === 'boolean' // Otherwise, did the developer explicitly set a true/false setting in the window settings (NRN_USE_MOCK)?
-      ? window.NRN_USE_MOCK
-      : !window.NRN_API_BASE; // no real API configured → mock
+export const API_BASE = backendUrl();
 
 export const TOKEN_KEY = 'ncea_token'; //label written on the storage locker-> use label key to open the box
