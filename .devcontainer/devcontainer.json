@@ -1,0 +1,22 @@
+{
+  "name": "NCEA Review Navigator",
+  "image": "mcr.microsoft.com/devcontainers/python:3.11",
+
+  // Runs once when the Codespace is first created.
+  // Installs the Python libraries and makes sure the database tables exist.
+  "postCreateCommand": "pip install -r back-end/requirements.txt && cd back-end && python -c 'import db; db.init_db()'",
+
+  // Runs every time the Codespace is opened, so both servers are already going.
+  "postAttachCommand": "bash .devcontainer/start-servers.sh",
+
+  "forwardPorts": [5050, 5500],
+  "portsAttributes": {
+    "5050": {
+      "label": "Back-end API (Flask)"
+    },
+    "5500": {
+      "label": "Front-end - OPEN THIS ONE",
+      "onAutoForward": "openPreview"
+    }
+  }
+}
